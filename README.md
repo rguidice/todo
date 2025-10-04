@@ -1,4 +1,6 @@
-# Todo App
+# todo App
+
+**This is an experiment in vibe coding, Claude Code, LLM + tool access, etc. Do not take seriously. :D**
 
 A local-first, fast, minimal to-do list application built with Electron, React, and TypeScript.
 
