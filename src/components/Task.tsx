@@ -132,7 +132,7 @@ const Task: React.FC<TaskProps> = ({
             {task.priority}
           </span>
         )}
-        {canHaveChildren && !task.completed && (
+        {canHaveChildren && !task.completed ? (
           <button
             className="task-add-subtask"
             onClick={handleAddSubtaskClick}
@@ -141,14 +141,9 @@ const Task: React.FC<TaskProps> = ({
           >
             +
           </button>
+        ) : (
+          <div className="task-button-spacer"></div>
         )}
-        <button
-          className="task-delete"
-          onClick={() => onDelete(task.id)}
-          aria-label="Delete task"
-        >
-          ×
-        </button>
       </div>
 
       {isAddingSubtask && (
@@ -222,6 +217,21 @@ const Task: React.FC<TaskProps> = ({
             className="context-menu"
             style={{ top: contextMenuPos.y, left: contextMenuPos.x }}
           >
+            {canHaveChildren && !task.completed && (
+              <button className="context-menu-item" onClick={() => {
+                handleAddSubtaskClick()
+                setShowContextMenu(false)
+              }}>
+                Add Subtask
+              </button>
+            )}
+            <button className="context-menu-item danger" onClick={() => {
+              onDelete(task.id)
+              setShowContextMenu(false)
+            }}>
+              Delete Task
+            </button>
+            <div className="context-menu-divider"></div>
             <div className="context-menu-header">Set Priority</div>
             <button className="context-menu-item" onClick={() => handleSetPriority(null)}>
               None
