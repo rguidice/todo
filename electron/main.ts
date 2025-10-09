@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, screen } from 'electron'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import fs from 'fs/promises'
@@ -11,12 +11,56 @@ console.log('Data directory:', DATA_DIR)
 
 let mainWindow: BrowserWindow | null = null
 
-const createWindow = () => {
+interface WindowState {
+  x: number
+  y: number
+  width: number
+  height: number
+  isMaximized: boolean
+}
+
+const WINDOW_STATE_FILE = path.join(DATA_DIR, 'window-state.json')
+
+// Load saved window state
+async function loadWindowState(): Promise<WindowState | null> {
+  try {
+    const data = await fs.readFile(WINDOW_STATE_FILE, 'utf-8')
+    return JSON.parse(data)
+  } catch {
+    return null
+  }
+}
+
+// Save window state
+async function saveWindowState(state: WindowState): Promise<void> {
+  await ensureDataDir()
+  await fs.writeFile(WINDOW_STATE_FILE, JSON.stringify(state, null, 2), 'utf-8')
+}
+
+// Check if window position is visible on any screen
+function isVisibleOnScreen(bounds: { x: number; y: number; width: number; height: number }): boolean {
+  const displays = screen.getAllDisplays()
+  return displays.some(display => {
+    const { x, y, width, height } = display.bounds
+    return (
+      bounds.x >= x &&
+      bounds.y >= y &&
+      bounds.x + bounds.width <= x + width &&
+      bounds.y + bounds.height <= y + height
+    )
+  })
+}
+
+const createWindow = async () => {
   // Create the browser window with initial size from spec (800x400)
   const preloadPath = path.join(__dirname, 'preload.js')
   console.log('Preload script path:', preloadPath)
 
-  mainWindow = new BrowserWindow({
+  // Load saved window state
+  const savedState = await loadWindowState()
+
+  // Default window options
+  let windowOptions: Electron.BrowserWindowConstructorOptions = {
     width: 800,
     height: 400,
     minWidth: 600,
@@ -30,7 +74,19 @@ const createWindow = () => {
     titleBarStyle: 'hidden', // Hide title bar but keep traffic lights
     trafficLightPosition: { x: 10, y: 10 }, // Position stoplight buttons
     show: false // Don't show until ready
-  })
+  }
+
+  // Restore window position if saved state exists and is visible
+  if (savedState) {
+    if (isVisibleOnScreen(savedState)) {
+      windowOptions.x = savedState.x
+      windowOptions.y = savedState.y
+      windowOptions.width = savedState.width
+      windowOptions.height = savedState.height
+    }
+  }
+
+  mainWindow = new BrowserWindow(windowOptions)
 
   // Load the app
   if (process.env.VITE_DEV_SERVER_URL) {
@@ -42,15 +98,29 @@ const createWindow = () => {
 
   // Show window when ready to prevent visual flash
   mainWindow.once('ready-to-show', () => {
+    // Restore maximized state if it was saved
+    if (savedState?.isMaximized) {
+      mainWindow?.maximize()
+    }
     mainWindow?.show()
   })
 
-  // Save window bounds on close (for persistence between sessions)
-  mainWindow.on('close', () => {
+  // Save window state on close (for persistence between sessions)
+  mainWindow.on('close', async () => {
     if (mainWindow) {
       const bounds = mainWindow.getBounds()
-      // TODO: Save bounds to storage for next session
-      console.log('Window bounds:', bounds)
+      const isMaximized = mainWindow.isMaximized()
+
+      const state: WindowState = {
+        x: bounds.x,
+        y: bounds.y,
+        width: bounds.width,
+        height: bounds.height,
+        isMaximized
+      }
+
+      await saveWindowState(state)
+      console.log('Window state saved:', state)
     }
   })
 

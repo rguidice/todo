@@ -12,7 +12,13 @@ export const loadTasks = async (): Promise<AppData> => {
     const data = await window.electron.loadFile('tasks.json')
     if (data) {
       console.log('Loaded tasks from file:', data)
-      return JSON.parse(data) as AppData
+      const parsed = JSON.parse(data) as AppData
+      // Add autoSort field to columns that don't have it (backward compatibility)
+      parsed.columns = parsed.columns.map(col => ({
+        ...col,
+        autoSort: col.autoSort ?? false
+      }))
+      return parsed
     }
     console.log('No tasks file found, starting with empty state')
     return { columns: [] }
@@ -51,12 +57,20 @@ export const generateMarkdown = (data: AppData): string => {
     const rootTasks = column.tasks.filter(t => !t.parentId)
 
     const renderTask = (task: any, level = 0): string => {
-      const indent = '  '.repeat(level)
       const checkbox = task.completed ? '✅' : '⬜'
       const priority = task.priority ? ` [${task.priority}]` : ''
-      let md = `${indent}## ${task.text}${priority} ${checkbox}\n`
 
-      // Render children
+      let md = ''
+      if (level === 0) {
+        // Top-level task uses ##
+        md = `## ${task.text}${priority} ${checkbox}\n`
+      } else {
+        // Children use - with proper indentation
+        const indent = '  '.repeat(level - 1)
+        md = `${indent}- ${task.text}${priority} ${checkbox}\n`
+      }
+
+      // Render children recursively
       const children = column.tasks.filter(t => t.parentId === task.id)
       for (const child of children) {
         md += renderTask(child, level + 1)
@@ -67,10 +81,9 @@ export const generateMarkdown = (data: AppData): string => {
 
     for (const task of rootTasks) {
       markdown += renderTask(task)
+      markdown += '\n' // Empty line between top-level tasks
     }
-
-    markdown += '\n'
   }
 
-  return markdown
+  return markdown.trim() + '\n'
 }

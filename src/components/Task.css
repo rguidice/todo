@@ -6,7 +6,12 @@
   margin-bottom: 0.25rem;
   background-color: var(--bg-primary);
   border-radius: 4px;
-  transition: opacity 0.2s;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  border-left: 3px solid transparent;
+}
+
+.task.has-priority {
+  border-left-width: 3px;
 }
 
 .task:hover .task-delete {
@@ -15,6 +20,7 @@
 
 .task.completed {
   opacity: 0.7;
+  transition: opacity 0.3s ease;
 }
 
 .task-checkbox {
@@ -29,10 +35,27 @@
   font-size: 0.875rem;
   color: var(--text-primary);
   word-break: break-word;
+  cursor: text;
+}
+
+.task-text:hover {
+  opacity: 0.8;
 }
 
 .task.completed .task-text {
   text-decoration: line-through;
+  transition: text-decoration 0.2s ease;
+}
+
+.task-edit-input {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--accent-blue);
+  border-radius: 3px;
+  padding: 0.25rem 0.5rem;
+  outline: none;
 }
 
 .task-delete {
@@ -54,4 +77,129 @@
 
 .task-delete:hover {
   color: #fb4934; /* Gruvbox red */
+}
+
+.task-container {
+  margin-bottom: 0.125rem;
+}
+
+.task-add-subtask {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, color 0.2s;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.25rem;
+}
+
+.task:hover .task-add-subtask {
+  opacity: 1;
+}
+
+.task-add-subtask:hover {
+  color: var(--text-primary);
+}
+
+.subtask-input-form {
+  margin-bottom: 0.25rem;
+}
+
+.subtask-input-form input {
+  width: 100%;
+  padding: 0.5rem;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.subtask-input-form input:focus {
+  border-color: var(--accent-color);
+}
+
+.task-priority-badge {
+  flex-shrink: 0;
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: #282828;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  margin-left: auto;
+  margin-right: 0.25rem;
+}
+
+.context-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10001;
+}
+
+.context-menu {
+  position: fixed;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.25rem;
+  min-width: 150px;
+  z-index: 10002;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.context-menu-header {
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.25rem;
+}
+
+.context-menu-item {
+  width: 100%;
+  padding: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.875rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.context-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.context-menu-item.p0:hover {
+  background-color: rgba(214, 93, 14, 0.1);
+  color: #d65d0e;
+}
+
+.context-menu-item.p1:hover {
+  background-color: rgba(69, 133, 136, 0.1);
+  color: #458588;
+}
+
+.context-menu-item.p2:hover {
+  background-color: rgba(146, 131, 116, 0.1);
+  color: #928374;
 }

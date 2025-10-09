@@ -17,6 +17,7 @@ export interface Column {
   backgroundColor: string
   visible: boolean
   order: number
+  autoSort: boolean
   tasks: Task[]
 }
 

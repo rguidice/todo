@@ -1,77 +1,83 @@
 import React, { useState } from 'react'
 import { useApp } from './context/AppContext'
 import Column from './components/Column'
-import { GRUVBOX_COLORS } from './types'
+import Sidebar from './components/Sidebar'
 import './App.css'
 
 function App() {
-  const { data, addColumn, addTask, toggleTask, deleteTask } = useApp()
-  const [showColumnDialog, setShowColumnDialog] = useState(false)
-  const [newColumnName, setNewColumnName] = useState('')
+  const { data, addColumn, deleteColumn, updateColumnColor, reorderColumns, addTask, addSubtask, toggleTask, deleteTask, updateTask, updateTaskPriority, toggleAutoSort, toggleColumnVisibility, clearCompleted } = useApp()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [draggedColumnIndex, setDraggedColumnIndex] = useState<number | null>(null)
 
-  const handleAddColumn = () => {
-    if (newColumnName.trim()) {
-      // Pick a color from Gruvbox palette (cycle through)
-      const colors = Object.values(GRUVBOX_COLORS)
-      const colorIndex = data.columns.length % colors.length
-      addColumn(newColumnName.trim(), colors[colorIndex])
-      setNewColumnName('')
-      setShowColumnDialog(false)
-    }
+  const visibleColumns = data.columns.filter(col => col.visible)
+
+  const handleDragStart = (index: number) => {
+    setDraggedColumnIndex(index)
+  }
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    if (draggedColumnIndex === null || draggedColumnIndex === index) return
+
+    reorderColumns(draggedColumnIndex, index)
+    setDraggedColumnIndex(index)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedColumnIndex(null)
   }
 
   return (
     <div className="app">
       <div className="top-bar">
-        <button className="menu-button" onClick={() => setShowColumnDialog(true)}>
-          + Column
+        <button className="menu-button" onClick={() => setSidebarOpen(!sidebarOpen)}>
+          ☰
         </button>
         <h1>todo</h1>
         <button className="report-button">Generate Report</button>
       </div>
 
       <div className="main-content">
+        <Sidebar
+          isOpen={sidebarOpen}
+          columns={data.columns}
+          onAddColumn={addColumn}
+          onToggleColumnVisibility={toggleColumnVisibility}
+        />
+
         <div className="columns-container">
-          {data.columns.length === 0 ? (
+          {visibleColumns.length === 0 ? (
             <div className="empty-state">
-              <p>No columns yet. Click "+ Column" to get started!</p>
+              <p>No columns visible. {data.columns.length === 0 ? 'Click "☰" to add a column!' : 'Toggle columns in the sidebar.'}</p>
             </div>
           ) : (
-            data.columns.map(column => (
-              <Column
-                key={column.id}
-                column={column}
-                onAddTask={addTask}
-                onToggleTask={toggleTask}
-                onDeleteTask={deleteTask}
-              />
-            ))
+            visibleColumns.map(column => {
+              const columnIndex = data.columns.findIndex(col => col.id === column.id)
+              return (
+                <Column
+                  key={column.id}
+                  column={column}
+                  onAddTask={addTask}
+                  onAddSubtask={addSubtask}
+                  onToggleTask={toggleTask}
+                  onDeleteTask={deleteTask}
+                  onUpdateTask={updateTask}
+                  onUpdatePriority={updateTaskPriority}
+                  onToggleAutoSort={toggleAutoSort}
+                  onClearCompleted={clearCompleted}
+                  onDeleteColumn={deleteColumn}
+                  onUpdateColor={updateColumnColor}
+                  onHideColumn={toggleColumnVisibility}
+                  onDragStart={() => handleDragStart(columnIndex)}
+                  onDragOver={(e) => handleDragOver(e, columnIndex)}
+                  onDragEnd={handleDragEnd}
+                  isDragging={draggedColumnIndex === columnIndex}
+                />
+              )
+            })
           )}
         </div>
       </div>
-
-      {showColumnDialog && (
-        <div className="dialog-overlay" onClick={() => setShowColumnDialog(false)}>
-          <div className="dialog" onClick={(e) => e.stopPropagation()}>
-            <h2>Add Column</h2>
-            <input
-              type="text"
-              value={newColumnName}
-              onChange={(e) => setNewColumnName(e.target.value)}
-              placeholder="Column name..."
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleAddColumn()
-                if (e.key === 'Escape') setShowColumnDialog(false)
-              }}
-            />
-            <div className="dialog-buttons">
-              <button onClick={() => setShowColumnDialog(false)}>Cancel</button>
-              <button onClick={handleAddColumn} className="primary">Add</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
