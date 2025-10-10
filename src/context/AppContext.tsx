@@ -126,6 +126,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           if (!targetTask) return col
 
           const newCompletedState = !targetTask.completed
+          const completionTimestamp = newCompletedState ? new Date().toISOString() : undefined
 
           // Helper function to get all descendant task IDs recursively
           const getDescendantIds = (task: Task): string[] => {
@@ -143,7 +144,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             ...col,
             tasks: col.tasks.map(task =>
               affectedIds.has(task.id)
-                ? { ...task, completed: newCompletedState }
+                ? { ...task, completed: newCompletedState, completedAt: completionTimestamp }
                 : task
             )
           }

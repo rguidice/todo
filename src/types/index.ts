@@ -7,6 +7,7 @@ export interface Task {
   text: string
   priority: Priority
   completed: boolean
+  completedAt?: string // ISO 8601 timestamp when task was completed
   parentId: string | null
   children: string[]
 }
@@ -27,13 +28,14 @@ export interface AppData {
 
 // Gruvbox color palette for columns
 export const GRUVBOX_COLORS = {
-  warmRed: '#cc241d',
-  warmOrange: '#d65d0e',
-  warmYellow: '#d79921',
-  warmGreen: '#98971a',
-  warmAqua: '#689d6a',
-  warmBlue: '#458588',
-  warmPurple: '#b16286',
+  neutralDark: '#3c3836',    // Dark gray - great contrast with cream text
+  neutralMid: '#504945',      // Medium gray - subtle, professional
+  neutralWarm: '#665c54',     // Warm gray - lighter neutral option
+  softBlue: '#076678',        // Darker blue - distinguishes from P1 (#458588)
+  goldenYellow: '#b57614',    // Darker yellow - better text contrast
+  deepAqua: '#427b58',        // Darker aqua - improved readability
+  warmPurple: '#b16286',      // Purple - works well
+  forestGreen: '#79740e',     // Darker muted green
 }
 
 export const PRIORITY_COLORS = {

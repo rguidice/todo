@@ -12,6 +12,10 @@ contextBridge.exposeInMainWorld('electron', {
   loadFile: (filename: string) =>
     ipcRenderer.invoke('load-file', filename),
 
+  // Report operations
+  saveReport: (filename: string, data: string) =>
+    ipcRenderer.invoke('save-report', filename, data),
+
   // Window controls
   minimize: () => ipcRenderer.send('window-minimize'),
   maximize: () => ipcRenderer.send('window-maximize'),
@@ -22,6 +26,7 @@ contextBridge.exposeInMainWorld('electron', {
 export interface ElectronAPI {
   saveFile: (filename: string, data: string) => Promise<void>
   loadFile: (filename: string) => Promise<string>
+  saveReport: (filename: string, data: string) => Promise<void>
   minimize: () => void
   maximize: () => void
   close: () => void

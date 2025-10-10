@@ -6,7 +6,7 @@ import fs from 'fs/promises'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // Data directory for storing tasks (in project root)
-const DATA_DIR = path.join(__dirname, '../../data')
+const DATA_DIR = path.join(__dirname, '../data')
 console.log('Data directory:', DATA_DIR)
 
 let mainWindow: BrowserWindow | null = null
@@ -155,6 +155,21 @@ ipcMain.handle('load-file', async (_event, filename: string) => {
     // File doesn't exist, return null
     return null
   }
+})
+
+ipcMain.handle('save-report', async (_event, filename: string, data: string) => {
+  await ensureDataDir()
+  const reportsDir = path.join(DATA_DIR, 'reports')
+
+  // Ensure reports directory exists
+  try {
+    await fs.access(reportsDir)
+  } catch {
+    await fs.mkdir(reportsDir, { recursive: true })
+  }
+
+  const filePath = path.join(reportsDir, filename)
+  await fs.writeFile(filePath, data, 'utf-8')
 })
 
 // This method will be called when Electron has finished initialization

@@ -2,12 +2,14 @@ import React, { useState } from 'react'
 import { useApp } from './context/AppContext'
 import Column from './components/Column'
 import Sidebar from './components/Sidebar'
+import ReportModal from './components/ReportModal'
 import './App.css'
 
 function App() {
   const { data, addColumn, deleteColumn, updateColumnColor, reorderColumns, addTask, addSubtask, toggleTask, deleteTask, updateTask, updateTaskPriority, toggleAutoSort, toggleColumnVisibility, clearCompleted } = useApp()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [draggedColumnIndex, setDraggedColumnIndex] = useState<number | null>(null)
+  const [showReportModal, setShowReportModal] = useState(false)
 
   const visibleColumns = data.columns.filter(col => col.visible)
 
@@ -27,6 +29,18 @@ function App() {
     setDraggedColumnIndex(null)
   }
 
+  const handleSaveReport = async (startDate: string, endDate: string, content: string) => {
+    const filename = `completed_${startDate}_to_${endDate}.md`
+    try {
+      await window.electron.saveReport(filename, content)
+      console.log(`Report saved: ${filename}`)
+      setShowReportModal(false)
+    } catch (error) {
+      console.error('Failed to save report:', error)
+      alert('Failed to save report. Please try again.')
+    }
+  }
+
   return (
     <div className="app">
       <div className="top-bar">
@@ -34,7 +48,7 @@ function App() {
           ☰
         </button>
         <h1>todo</h1>
-        <button className="report-button">Generate Report</button>
+        <button className="report-button" onClick={() => setShowReportModal(true)}>Generate Report</button>
       </div>
 
       <div className="main-content">
@@ -78,6 +92,14 @@ function App() {
           )}
         </div>
       </div>
+
+      {showReportModal && (
+        <ReportModal
+          data={data}
+          onClose={() => setShowReportModal(false)}
+          onSave={handleSaveReport}
+        />
+      )}
     </div>
   )
 }
