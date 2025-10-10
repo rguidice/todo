@@ -27,6 +27,7 @@ export interface ElectronAPI {
   saveFile: (filename: string, data: string) => Promise<void>
   loadFile: (filename: string) => Promise<string>
   saveReport: (filename: string, data: string) => Promise<void>
+  checkReportExists: (filename: string) => Promise<boolean>
   minimize: () => void
   maximize: () => void
   close: () => void

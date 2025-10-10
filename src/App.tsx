@@ -34,10 +34,11 @@ function App() {
     try {
       await window.electron.saveReport(filename, content)
       console.log(`Report saved: ${filename}`)
-      setShowReportModal(false)
+      // Don't close modal here - let ReportModal handle it with success message
     } catch (error) {
       console.error('Failed to save report:', error)
       alert('Failed to save report. Please try again.')
+      throw error // Re-throw so ReportModal knows it failed
     }
   }
 

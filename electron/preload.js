@@ -12,6 +12,13 @@ contextBridge.exposeInMainWorld('electron', {
   loadFile: (filename) =>
     ipcRenderer.invoke('load-file', filename),
 
+  // Report operations
+  saveReport: (filename, data) =>
+    ipcRenderer.invoke('save-report', filename, data),
+
+  checkReportExists: (filename) =>
+    ipcRenderer.invoke('check-report-exists', filename),
+
   // Window controls
   minimize: () => ipcRenderer.send('window-minimize'),
   maximize: () => ipcRenderer.send('window-maximize'),

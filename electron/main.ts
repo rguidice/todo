@@ -172,6 +172,19 @@ ipcMain.handle('save-report', async (_event, filename: string, data: string) => 
   await fs.writeFile(filePath, data, 'utf-8')
 })
 
+ipcMain.handle('check-report-exists', async (_event, filename: string) => {
+  await ensureDataDir()
+  const reportsDir = path.join(DATA_DIR, 'reports')
+  const filePath = path.join(reportsDir, filename)
+
+  try {
+    await fs.access(filePath)
+    return true // File exists
+  } catch {
+    return false // File doesn't exist
+  }
+})
+
 // This method will be called when Electron has finished initialization
 app.whenReady().then(() => {
   createWindow()

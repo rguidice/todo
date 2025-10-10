@@ -21,6 +21,9 @@ const ReportModal: React.FC<ReportModalProps> = ({ data, onClose, onSave }) => {
   const [startDate, setStartDate] = useState(formatDateForInput(sevenDaysAgo))
   const [endDate, setEndDate] = useState(formatDateForInput(today))
   const [reportContent, setReportContent] = useState('')
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [savedFilename, setSavedFilename] = useState('')
+  const [showOverwriteConfirm, setShowOverwriteConfirm] = useState(false)
 
   // Generate report whenever dates change
   useEffect(() => {
@@ -28,8 +31,40 @@ const ReportModal: React.FC<ReportModalProps> = ({ data, onClose, onSave }) => {
     setReportContent(content)
   }, [data, startDate, endDate])
 
-  const handleSave = () => {
-    onSave(startDate, endDate, reportContent)
+  const handleSave = async () => {
+    const filename = `completed_${startDate}_to_${endDate}.md`
+    setSavedFilename(filename)
+
+    // Check if file already exists
+    const exists = await window.electron.checkReportExists(filename)
+    if (exists) {
+      setShowOverwriteConfirm(true)
+      return
+    }
+
+    // File doesn't exist, proceed with save
+    await performSave()
+  }
+
+  const performSave = async () => {
+    setShowOverwriteConfirm(false)
+
+    try {
+      // Save the report first
+      await onSave(startDate, endDate, reportContent)
+
+      // Then show success message
+      setShowSuccess(true)
+
+      // Auto-hide success message and close modal after 3 seconds
+      setTimeout(() => {
+        setShowSuccess(false)
+        onClose()
+      }, 3000)
+    } catch (error) {
+      // Error is already shown by App.tsx, just don't show success
+      console.error('Save failed:', error)
+    }
   }
 
   const formatDateForDisplay = (dateStr: string) => {
@@ -71,23 +106,45 @@ const ReportModal: React.FC<ReportModalProps> = ({ data, onClose, onSave }) => {
         </div>
 
         <div className="report-modal-buttons">
-          <button onClick={onClose}>Cancel</button>
-          <button onClick={handleSave} className="save-button">Save Report</button>
+          <button onClick={onClose} disabled={showSuccess}>Cancel</button>
+          <button onClick={handleSave} className="save-button" disabled={showSuccess}>Save Report</button>
         </div>
+
+        {showSuccess && (
+          <div className="report-success-message">
+            ✓ Generated report saved to: data/reports/{savedFilename}
+          </div>
+        )}
+
+        {showOverwriteConfirm && (
+          <div className="report-confirm-overlay">
+            <div className="report-confirm-dialog">
+              <h3>File Already Exists</h3>
+              <p>A report with the name <strong>{savedFilename}</strong> already exists.</p>
+              <p>Do you want to overwrite it?</p>
+              <div className="report-confirm-buttons">
+                <button onClick={() => setShowOverwriteConfirm(false)}>Cancel</button>
+                <button onClick={performSave} className="overwrite-button">Overwrite</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
 function generateReport(data: AppData, startDateStr: string, endDateStr: string): string {
-  const startDate = new Date(startDateStr)
-  startDate.setHours(0, 0, 0, 0)
+  // Parse dates in local timezone by splitting the string
+  const [startYear, startMonth, startDay] = startDateStr.split('-').map(Number)
+  const startDate = new Date(startYear, startMonth - 1, startDay, 0, 0, 0, 0)
 
-  const endDate = new Date(endDateStr)
-  endDate.setHours(23, 59, 59, 999)
+  const [endYear, endMonth, endDay] = endDateStr.split('-').map(Number)
+  const endDate = new Date(endYear, endMonth - 1, endDay, 23, 59, 59, 999)
 
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
+    const [year, month, day] = dateStr.split('-').map(Number)
+    const date = new Date(year, month - 1, day)
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   }
 
