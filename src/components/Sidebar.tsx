@@ -7,13 +7,15 @@ interface SidebarProps {
   columns: Column[]
   onAddColumn: (name: string, backgroundColor: string) => void
   onToggleColumnVisibility: (columnId: string) => void
+  onOpenSettings: () => void
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
   isOpen,
   columns,
   onAddColumn,
-  onToggleColumnVisibility
+  onToggleColumnVisibility,
+  onOpenSettings
 }) => {
   const [isAddingColumn, setIsAddingColumn] = useState(false)
   const [newColumnName, setNewColumnName] = useState('')
@@ -98,7 +100,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       <div className="sidebar-section">
-        <button className="sidebar-settings-button">
+        <button className="sidebar-settings-button" onClick={onOpenSettings}>
           ⚙ Settings
         </button>
       </div>

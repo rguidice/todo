@@ -19,6 +19,19 @@ contextBridge.exposeInMainWorld('electron', {
   checkReportExists: (filename) =>
     ipcRenderer.invoke('check-report-exists', filename),
 
+  // Settings operations
+  getSettings: () =>
+    ipcRenderer.invoke('get-settings'),
+
+  updateSettings: (settings) =>
+    ipcRenderer.invoke('update-settings', settings),
+
+  selectDirectory: () =>
+    ipcRenderer.invoke('select-directory'),
+
+  getDataDirectory: () =>
+    ipcRenderer.invoke('get-data-directory'),
+
   // Window controls
   minimize: () => ipcRenderer.send('window-minimize'),
   maximize: () => ipcRenderer.send('window-maximize'),

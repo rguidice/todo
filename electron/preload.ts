@@ -23,11 +23,19 @@ contextBridge.exposeInMainWorld('electron', {
 })
 
 // TypeScript type definition for the exposed API
+export interface AppSettings {
+  dataDirectory: string
+}
+
 export interface ElectronAPI {
   saveFile: (filename: string, data: string) => Promise<void>
   loadFile: (filename: string) => Promise<string>
   saveReport: (filename: string, data: string) => Promise<void>
   checkReportExists: (filename: string) => Promise<boolean>
+  getSettings: () => Promise<AppSettings>
+  updateSettings: (settings: AppSettings) => Promise<void>
+  selectDirectory: () => Promise<string | null>
+  getDataDirectory: () => Promise<string>
   minimize: () => void
   maximize: () => void
   close: () => void

@@ -1,13 +1,42 @@
-import { app, BrowserWindow, ipcMain, screen } from 'electron'
+import { app, BrowserWindow, ipcMain, screen, dialog } from 'electron'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import fs from 'fs/promises'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// Data directory for storing tasks (in project root)
-const DATA_DIR = path.join(__dirname, '../data')
-console.log('Data directory:', DATA_DIR)
+// Settings storage
+interface AppSettings {
+  dataDirectory: string
+}
+
+const SETTINGS_FILE = path.join(app.getPath('userData'), 'settings.json')
+const DEFAULT_DATA_DIR = path.join(__dirname, '../data')
+
+// Mutable data directory (can be changed via settings)
+let DATA_DIR = DEFAULT_DATA_DIR
+
+// Load settings from file
+async function loadSettings(): Promise<AppSettings> {
+  try {
+    const data = await fs.readFile(SETTINGS_FILE, 'utf-8')
+    return JSON.parse(data)
+  } catch {
+    // Return default settings if file doesn't exist
+    return { dataDirectory: DEFAULT_DATA_DIR }
+  }
+}
+
+// Save settings to file
+async function saveSettings(settings: AppSettings): Promise<void> {
+  const userDataDir = app.getPath('userData')
+  try {
+    await fs.access(userDataDir)
+  } catch {
+    await fs.mkdir(userDataDir, { recursive: true })
+  }
+  await fs.writeFile(SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf-8')
+}
 
 let mainWindow: BrowserWindow | null = null
 
@@ -185,8 +214,44 @@ ipcMain.handle('check-report-exists', async (_event, filename: string) => {
   }
 })
 
+// Settings IPC handlers
+ipcMain.handle('get-settings', async () => {
+  return await loadSettings()
+})
+
+ipcMain.handle('update-settings', async (_event, settings: AppSettings) => {
+  await saveSettings(settings)
+  DATA_DIR = settings.dataDirectory
+  console.log('Data directory updated to:', DATA_DIR)
+})
+
+ipcMain.handle('select-directory', async () => {
+  if (!mainWindow) return null
+
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openDirectory', 'createDirectory'],
+    title: 'Select Data Directory',
+    buttonLabel: 'Select'
+  })
+
+  if (result.canceled || result.filePaths.length === 0) {
+    return null
+  }
+
+  return result.filePaths[0]
+})
+
+ipcMain.handle('get-data-directory', async () => {
+  return DATA_DIR
+})
+
 // This method will be called when Electron has finished initialization
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  // Load settings and set DATA_DIR before creating window
+  const settings = await loadSettings()
+  DATA_DIR = settings.dataDirectory
+  console.log('Data directory:', DATA_DIR)
+
   createWindow()
 
   app.on('activate', () => {

@@ -3,6 +3,7 @@ import { useApp } from './context/AppContext'
 import Column from './components/Column'
 import Sidebar from './components/Sidebar'
 import ReportModal from './components/ReportModal'
+import SettingsModal from './components/SettingsModal'
 import './App.css'
 
 function App() {
@@ -10,6 +11,7 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [draggedColumnIndex, setDraggedColumnIndex] = useState<number | null>(null)
   const [showReportModal, setShowReportModal] = useState(false)
+  const [showSettingsModal, setShowSettingsModal] = useState(false)
 
   const visibleColumns = data.columns.filter(col => col.visible)
 
@@ -58,6 +60,7 @@ function App() {
           columns={data.columns}
           onAddColumn={addColumn}
           onToggleColumnVisibility={toggleColumnVisibility}
+          onOpenSettings={() => setShowSettingsModal(true)}
         />
 
         <div className="columns-container">
@@ -99,6 +102,12 @@ function App() {
           data={data}
           onClose={() => setShowReportModal(false)}
           onSave={handleSaveReport}
+        />
+      )}
+
+      {showSettingsModal && (
+        <SettingsModal
+          onClose={() => setShowSettingsModal(false)}
         />
       )}
     </div>
