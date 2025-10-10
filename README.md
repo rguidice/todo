@@ -1,7 +1,8 @@
 # todo App
 
 **This is an experiment in vibe coding, Claude Code, LLM + tool access, etc. Do not take seriously. :D**
-**Initial docs/todo_spec_v1/2.md files generated in Claude web UI with Sonnet 4.5. Code generated in Claude Code with Sonnet 4.5. Application icon generated with ChatGPT's GPT-5 built-in image generation.
+
+**Initial docs/todo_spec_v1/2.md files generated in Claude web UI with Sonnet 4.5. Code generated in Claude Code with Sonnet 4.5. Application icon generated with ChatGPT's GPT-5 built-in image generation.**
 
 A local-first, fast, minimal to-do list application built with Electron, React, and TypeScript.
 
