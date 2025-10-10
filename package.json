@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "electron .",
+    "package": "npm run build && electron-builder"
   },
   "keywords": [
     "todo",
@@ -36,12 +38,13 @@
   },
   "build": {
     "appId": "com.todoapp.app",
-    "productName": "Todo App",
+    "productName": "todo",
     "files": [
       "dist/**/*",
       "dist-electron/**/*"
     ],
     "mac": {
+      "icon": "build/icon.png",
       "category": "public.app-category.productivity",
       "target": "dmg"
     },

@@ -1,6 +1,7 @@
 # todo App
 
 **This is an experiment in vibe coding, Claude Code, LLM + tool access, etc. Do not take seriously. :D**
+**Initial docs/todo_spec_v1/2.md files generated in Claude web UI with Sonnet 4.5. Code generated in Claude Code with Sonnet 4.5. Application icon generated with ChatGPT's GPT-5 built-in image generation.
 
 A local-first, fast, minimal to-do list application built with Electron, React, and TypeScript.
 
@@ -34,12 +35,31 @@ npm run dev
 
 This will start Vite dev server and open the Electron app with hot-reload enabled.
 
-### Build
+### Build & Distribution
 
-To build the app for production:
+#### Development Mode
+```bash
+npm run dev
+```
+Runs Vite dev server with hot reload and opens DevTools. Changes update immediately.
+
+#### Production Build
 ```bash
 npm run build
 ```
+Compiles everything into optimized `dist/` and `dist-electron/` folders.
+
+#### Run Production Build
+```bash
+npm run start
+```
+Runs the built app from the dist folders (requires running `npm run build` first).
+
+#### Package Distributable
+```bash
+npm run package
+```
+Builds and packages the app into a distributable .dmg file (macOS) in the `release/` folder. This creates a standalone application that can be installed without Node.js or npm.
 
 ## Project Structure
 

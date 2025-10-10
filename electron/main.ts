@@ -11,7 +11,7 @@ interface AppSettings {
 }
 
 const SETTINGS_FILE = path.join(app.getPath('userData'), 'settings.json')
-const DEFAULT_DATA_DIR = path.join(__dirname, '../data')
+const DEFAULT_DATA_DIR = path.join(app.getPath('userData'), 'data')
 
 // Mutable data directory (can be changed via settings)
 let DATA_DIR = DEFAULT_DATA_DIR
