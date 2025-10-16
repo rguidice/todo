@@ -153,6 +153,8 @@ function generateReport(data: AppData, startDateStr: string, endDateStr: string)
   const visibleColumns = data.columns.filter(col => col.visible)
 
   for (const column of visibleColumns) {
+    // Include ALL completed tasks in date range, even if they've been cleared from view
+    // This ensures reports capture the full history
     const completedTasks = column.tasks.filter(task => {
       if (!task.completed || !task.completedAt) return false
       const completedDate = new Date(task.completedAt)

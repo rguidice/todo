@@ -36,7 +36,7 @@ const Task: React.FC<TaskProps> = ({
   const [editText, setEditText] = useState(task.text)
   const contextMenuRef = useRef<HTMLDivElement>(null)
 
-  let children = allTasks.filter(t => t.parentId === task.id)
+  let children = allTasks.filter(t => t.parentId === task.id && !t.cleared)
 
   // Sort children by priority if autoSort is enabled
   if (autoSort) {

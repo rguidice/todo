@@ -8,6 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // Settings storage
 interface AppSettings {
   dataDirectory: string
+  autoClearDuration: '1min' | '5min' | '1hr' | '4hr' | '24hr' | '1week' | 'never'
 }
 
 const SETTINGS_FILE = path.join(app.getPath('userData'), 'settings.json')
@@ -20,10 +21,18 @@ let DATA_DIR = DEFAULT_DATA_DIR
 async function loadSettings(): Promise<AppSettings> {
   try {
     const data = await fs.readFile(SETTINGS_FILE, 'utf-8')
-    return JSON.parse(data)
+    const settings = JSON.parse(data)
+    // Ensure all required fields have defaults
+    return {
+      dataDirectory: settings.dataDirectory || DEFAULT_DATA_DIR,
+      autoClearDuration: settings.autoClearDuration || 'never'
+    }
   } catch {
     // Return default settings if file doesn't exist
-    return { dataDirectory: DEFAULT_DATA_DIR }
+    return {
+      dataDirectory: DEFAULT_DATA_DIR,
+      autoClearDuration: 'never'
+    }
   }
 }
 

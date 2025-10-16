@@ -16,6 +16,22 @@ contextBridge.exposeInMainWorld('electron', {
   saveReport: (filename: string, data: string) =>
     ipcRenderer.invoke('save-report', filename, data),
 
+  checkReportExists: (filename: string) =>
+    ipcRenderer.invoke('check-report-exists', filename),
+
+  // Settings operations
+  getSettings: () =>
+    ipcRenderer.invoke('get-settings'),
+
+  updateSettings: (settings: AppSettings) =>
+    ipcRenderer.invoke('update-settings', settings),
+
+  selectDirectory: () =>
+    ipcRenderer.invoke('select-directory'),
+
+  getDataDirectory: () =>
+    ipcRenderer.invoke('get-data-directory'),
+
   // Window controls
   minimize: () => ipcRenderer.send('window-minimize'),
   maximize: () => ipcRenderer.send('window-maximize'),
@@ -25,6 +41,7 @@ contextBridge.exposeInMainWorld('electron', {
 // TypeScript type definition for the exposed API
 export interface AppSettings {
   dataDirectory: string
+  autoClearDuration: '1min' | '5min' | '1hr' | '4hr' | '24hr' | '1week' | 'never'
 }
 
 export interface ElectronAPI {

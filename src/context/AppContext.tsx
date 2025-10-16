@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
-import { AppData, Column, Task, Priority } from '../types'
+import { AppData, Column, Task, Priority, AppSettings, AUTO_CLEAR_OPTIONS, MAX_RETENTION_MS } from '../types'
 import { loadTasks, saveTasks } from '../utils/storage'
 
 interface AppContextType {
@@ -50,6 +50,97 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, [data])
 
+  // Auto-clear completed tasks based on settings and permanently delete old cleared tasks
+  useEffect(() => {
+    const checkAndClearCompletedTasks = async () => {
+      try {
+        const settings: AppSettings = await window.electron.getSettings()
+        const duration = settings.autoClearDuration
+        const now = new Date().toISOString()
+        const currentTime = Date.now()
+
+        setData(prev => ({
+          ...prev,
+          columns: prev.columns.map(col => {
+            // Step 1: Mark completed tasks as cleared if they're past the auto-clear duration
+            let updatedTasks = col.tasks.map(task => {
+              // Skip if auto-clear is disabled or task is already cleared
+              if (duration === 'never' || task.cleared) return task
+
+              // Check if task should be auto-cleared
+              if (task.completed && task.completedAt) {
+                const completedTime = new Date(task.completedAt).getTime()
+                const cutoffTime = currentTime - AUTO_CLEAR_OPTIONS[duration].milliseconds
+
+                if (completedTime < cutoffTime) {
+                  return { ...task, cleared: true, clearedAt: now }
+                }
+              }
+
+              return task
+            })
+
+            // Step 2: Permanently delete tasks that have been cleared longer than retention period
+            const retentionCutoffTime = currentTime - MAX_RETENTION_MS
+            const tasksToDelete = new Set<string>()
+
+            const checkForDeletion = (task: Task) => {
+              if (task.cleared && task.clearedAt) {
+                const clearedTime = new Date(task.clearedAt).getTime()
+                if (clearedTime < retentionCutoffTime) {
+                  tasksToDelete.add(task.id)
+                  // Add all descendants for deletion
+                  task.children.forEach(childId => {
+                    const child = updatedTasks.find(t => t.id === childId)
+                    if (child) {
+                      tasksToDelete.add(childId)
+                      // Recursively add descendants
+                      const addDescendants = (t: Task) => {
+                        t.children.forEach(cId => {
+                          tasksToDelete.add(cId)
+                          const c = updatedTasks.find(task => task.id === cId)
+                          if (c) addDescendants(c)
+                        })
+                      }
+                      addDescendants(child)
+                    }
+                  })
+                }
+              }
+            }
+
+            updatedTasks.forEach(task => checkForDeletion(task))
+
+            // Remove permanently deleted tasks
+            if (tasksToDelete.size > 0) {
+              updatedTasks = updatedTasks
+                .filter(task => !tasksToDelete.has(task.id))
+                .map(task => ({
+                  ...task,
+                  children: task.children.filter(id => !tasksToDelete.has(id))
+                }))
+            }
+
+            return {
+              ...col,
+              tasks: updatedTasks
+            }
+          })
+        }))
+      } catch (error) {
+        console.error('Failed to auto-clear completed tasks:', error)
+      }
+    }
+
+    // Check immediately on mount
+    checkAndClearCompletedTasks()
+
+    // Then check every minute
+    const interval = setInterval(checkAndClearCompletedTasks, 60 * 1000)
+
+    return () => clearInterval(interval)
+  }, [])
+
   const addColumn = (name: string, backgroundColor: string) => {
     const newColumn: Column = {
       id: `col-${Date.now()}`,
@@ -76,6 +167,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             text,
             priority,
             completed: false,
+            cleared: false,
             parentId: null,
             children: []
           }
@@ -99,6 +191,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             text,
             priority, // Allow setting priority for subtasks
             completed: false,
+            cleared: false,
             parentId,
             children: []
           }
@@ -199,6 +292,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       ...prev,
       columns: prev.columns.map(col => {
         if (col.id === columnId) {
+          const now = new Date().toISOString()
+
           // Get all completed task IDs (including their descendants)
           const completedTaskIds = new Set<string>()
 
@@ -215,13 +310,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
           col.tasks.forEach(task => addCompletedAndDescendants(task))
 
-          // Remove completed tasks and update parent children arrays
-          const updatedTasks = col.tasks
-            .filter(task => !completedTaskIds.has(task.id))
-            .map(task => ({
-              ...task,
-              children: task.children.filter(id => !completedTaskIds.has(id))
-            }))
+          // Mark completed tasks as cleared (don't delete them yet)
+          const updatedTasks = col.tasks.map(task => {
+            if (completedTaskIds.has(task.id)) {
+              return { ...task, cleared: true, clearedAt: now }
+            }
+            return task
+          })
 
           return {
             ...col,

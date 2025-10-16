@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import { AppSettings, AutoClearDuration, AUTO_CLEAR_OPTIONS } from '../types'
 import './SettingsModal.css'
-
-interface AppSettings {
-  dataDirectory: string
-}
 
 interface SettingsModalProps {
   onClose: () => void
@@ -11,6 +8,8 @@ interface SettingsModalProps {
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
   const [dataDirectory, setDataDirectory] = useState('')
+  const [originalDataDirectory, setOriginalDataDirectory] = useState('')
+  const [autoClearDuration, setAutoClearDuration] = useState<AutoClearDuration>('never')
   const [loading, setLoading] = useState(true)
   const [showSuccess, setShowSuccess] = useState(false)
 
@@ -20,6 +19,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
       try {
         const settings = await window.electron.getSettings()
         setDataDirectory(settings.dataDirectory)
+        setOriginalDataDirectory(settings.dataDirectory)
+        setAutoClearDuration(settings.autoClearDuration)
       } catch (error) {
         console.error('Failed to load settings:', error)
       } finally {
@@ -39,7 +40,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
 
   const handleSave = async () => {
     try {
-      const settings: AppSettings = { dataDirectory }
+      const settings: AppSettings = {
+        dataDirectory,
+        autoClearDuration
+      }
       await window.electron.updateSettings(settings)
 
       // Show success message
@@ -57,8 +61,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
   }
 
   const handleReset = async () => {
-    const currentDir = await window.electron.getDataDirectory()
-    setDataDirectory(currentDir)
+    const settings = await window.electron.getSettings()
+    setDataDirectory(settings.dataDirectory)
+    setAutoClearDuration(settings.autoClearDuration)
   }
 
   if (loading) {
@@ -101,6 +106,29 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
           </p>
         </div>
 
+        <div className="settings-section">
+          <h3>Auto-Clear Completed Tasks</h3>
+          <p className="settings-description">
+            Automatically delete completed tasks after the selected duration.
+          </p>
+
+          <select
+            value={autoClearDuration}
+            onChange={(e) => setAutoClearDuration(e.target.value as AutoClearDuration)}
+            className="auto-clear-select"
+          >
+            {(Object.keys(AUTO_CLEAR_OPTIONS) as AutoClearDuration[]).map((duration) => (
+              <option key={duration} value={duration}>
+                {AUTO_CLEAR_OPTIONS[duration].label}
+              </option>
+            ))}
+          </select>
+
+          <p className="settings-note">
+            Cleared tasks are hidden from view but kept for reports. Tasks are permanently deleted after 90 days to save space.
+          </p>
+        </div>
+
         <div className="settings-modal-buttons">
           <button onClick={onClose} disabled={showSuccess}>Cancel</button>
           <button onClick={handleReset} disabled={showSuccess}>Reset</button>
@@ -111,7 +139,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
 
         {showSuccess && (
           <div className="settings-success-message">
-            ✓ Settings saved successfully! Restart the app to apply changes.
+            ✓ Settings saved successfully!{dataDirectory !== originalDataDirectory && ' Restart the app to apply data directory changes.'}
           </div>
         )}
       </div>

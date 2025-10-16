@@ -77,8 +77,8 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
     }
   }, [isAdding])
 
-  // Separate top-level tasks into uncompleted and completed
-  const topLevelTasks = column.tasks.filter(task => task.parentId === null)
+  // Separate top-level tasks into uncompleted and completed (exclude cleared tasks)
+  const topLevelTasks = column.tasks.filter(task => task.parentId === null && !task.cleared)
   let uncompletedTasks = topLevelTasks.filter(task => !task.completed)
   let completedTasks = topLevelTasks.filter(task => task.completed)
 

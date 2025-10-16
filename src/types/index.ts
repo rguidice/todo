@@ -8,6 +8,8 @@ export interface Task {
   priority: Priority
   completed: boolean
   completedAt?: string // ISO 8601 timestamp when task was completed
+  cleared: boolean // Whether task has been cleared from view (but kept for reports)
+  clearedAt?: string // ISO 8601 timestamp when task was cleared
   parentId: string | null
   children: string[]
 }
@@ -43,3 +45,26 @@ export const PRIORITY_COLORS = {
   P1: '#458588', // Blue (medium)
   P2: '#928374', // Gray (low)
 }
+
+// Auto-clear duration options
+export type AutoClearDuration = '1min' | '5min' | '1hr' | '4hr' | '24hr' | '1week' | 'never'
+
+export interface AppSettings {
+  dataDirectory: string
+  autoClearDuration: AutoClearDuration
+}
+
+export const AUTO_CLEAR_OPTIONS = {
+  '1min': { label: '1 minute', milliseconds: 60 * 1000 },
+  '5min': { label: '5 minutes', milliseconds: 5 * 60 * 1000 },
+  '1hr': { label: '1 hour', milliseconds: 60 * 60 * 1000 },
+  '4hr': { label: '4 hours', milliseconds: 4 * 60 * 60 * 1000 },
+  '24hr': { label: '24 hours', milliseconds: 24 * 60 * 60 * 1000 },
+  '1week': { label: '1 week', milliseconds: 7 * 24 * 60 * 60 * 1000 },
+  'never': { label: 'Never', milliseconds: Infinity }
+} as const
+
+// Maximum retention period for cleared tasks (for report generation)
+// Tasks cleared longer than this will be permanently deleted
+export const MAX_RETENTION_DAYS = 90
+export const MAX_RETENTION_MS = MAX_RETENTION_DAYS * 24 * 60 * 60 * 1000
