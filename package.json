@@ -1,6 +1,6 @@
 {
   "name": "todo-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A local-first, fast, minimal to-do list application",
   "main": "dist-electron/main.js",
   "type": "module",
