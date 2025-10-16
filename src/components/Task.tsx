@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useLayoutEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Task as TaskType, PRIORITY_COLORS, Priority } from '../types'
 import './Task.css'
 
@@ -30,8 +31,10 @@ const Task: React.FC<TaskProps> = ({
   const [newSubtaskPriority, setNewSubtaskPriority] = useState<Priority>(null)
   const [showContextMenu, setShowContextMenu] = useState(false)
   const [contextMenuPos, setContextMenuPos] = useState({ x: 0, y: 0 })
+  const [adjustedMenuPos, setAdjustedMenuPos] = useState({ x: 0, y: 0 })
   const [isEditing, setIsEditing] = useState(false)
   const [editText, setEditText] = useState(task.text)
+  const contextMenuRef = useRef<HTMLDivElement>(null)
 
   let children = allTasks.filter(t => t.parentId === task.id)
 
@@ -67,7 +70,9 @@ const Task: React.FC<TaskProps> = ({
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault()
-    setContextMenuPos({ x: e.clientX, y: e.clientY })
+    const pos = { x: e.clientX, y: e.clientY }
+    setContextMenuPos(pos)
+    setAdjustedMenuPos(pos) // Initial position, will be adjusted by useLayoutEffect
     setShowContextMenu(true)
   }
 
@@ -94,6 +99,41 @@ const Task: React.FC<TaskProps> = ({
     setEditText(task.text)
     setIsEditing(false)
   }
+
+  // Adjust context menu position to keep it on screen
+  useLayoutEffect(() => {
+    if (showContextMenu && contextMenuRef.current) {
+      const menu = contextMenuRef.current
+      const menuRect = menu.getBoundingClientRect()
+      const viewportWidth = window.innerWidth
+      const viewportHeight = window.innerHeight
+
+      let x = contextMenuPos.x
+      let y = contextMenuPos.y
+
+      // Check if menu extends past right edge
+      if (x + menuRect.width > viewportWidth) {
+        x = viewportWidth - menuRect.width - 10 // 10px padding from edge
+      }
+
+      // Check if menu extends past bottom edge
+      if (y + menuRect.height > viewportHeight) {
+        y = viewportHeight - menuRect.height - 10 // 10px padding from edge
+      }
+
+      // Ensure menu doesn't go off the top
+      if (y < 10) {
+        y = 10
+      }
+
+      // Ensure menu doesn't go off the left
+      if (x < 10) {
+        x = 10
+      }
+
+      setAdjustedMenuPos({ x, y })
+    }
+  }, [showContextMenu, contextMenuPos])
 
   return (
     <div className="task-container">
@@ -210,12 +250,13 @@ const Task: React.FC<TaskProps> = ({
         />
       ))}
 
-      {showContextMenu && (
+      {showContextMenu && createPortal(
         <>
           <div className="context-menu-overlay" onClick={() => setShowContextMenu(false)} />
           <div
+            ref={contextMenuRef}
             className="context-menu"
-            style={{ top: contextMenuPos.y, left: contextMenuPos.x }}
+            style={{ top: adjustedMenuPos.y, left: adjustedMenuPos.x }}
           >
             {canHaveChildren && !task.completed && (
               <button className="context-menu-item" onClick={() => {
@@ -246,7 +287,8 @@ const Task: React.FC<TaskProps> = ({
               P2 - Low
             </button>
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   )

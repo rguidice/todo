@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Column as ColumnType, Priority, GRUVBOX_COLORS } from '../types'
 import Task from './Task'
 import './Column.css'
@@ -28,9 +29,12 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
   const [newTaskPriority, setNewTaskPriority] = useState<Priority>(null)
   const [showContextMenu, setShowContextMenu] = useState(false)
   const [contextMenuPos, setContextMenuPos] = useState({ x: 0, y: 0 })
+  const [adjustedMenuPos, setAdjustedMenuPos] = useState({ x: 0, y: 0 })
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
+  const contextMenuRef = useRef<HTMLDivElement>(null)
+  const colorPickerRef = useRef<HTMLDivElement>(null)
 
   const handleAddClick = () => {
     setIsAdding(true)
@@ -90,9 +94,47 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
 
   const handleHeaderContextMenu = (e: React.MouseEvent) => {
     e.preventDefault()
-    setContextMenuPos({ x: e.clientX, y: e.clientY })
+    const pos = { x: e.clientX, y: e.clientY }
+    setContextMenuPos(pos)
+    setAdjustedMenuPos(pos) // Initial position, will be adjusted by useLayoutEffect
     setShowContextMenu(true)
   }
+
+  // Adjust context menu position to keep it on screen
+  useLayoutEffect(() => {
+    const menuElement = showColorPicker ? colorPickerRef.current : showContextMenu ? contextMenuRef.current : null
+
+    if (menuElement) {
+      const menuRect = menuElement.getBoundingClientRect()
+      const viewportWidth = window.innerWidth
+      const viewportHeight = window.innerHeight
+
+      let x = contextMenuPos.x
+      let y = contextMenuPos.y
+
+      // Check if menu extends past right edge
+      if (x + menuRect.width > viewportWidth) {
+        x = viewportWidth - menuRect.width - 10 // 10px padding from edge
+      }
+
+      // Check if menu extends past bottom edge
+      if (y + menuRect.height > viewportHeight) {
+        y = viewportHeight - menuRect.height - 10 // 10px padding from edge
+      }
+
+      // Ensure menu doesn't go off the top
+      if (y < 10) {
+        y = 10
+      }
+
+      // Ensure menu doesn't go off the left
+      if (x < 10) {
+        x = 10
+      }
+
+      setAdjustedMenuPos({ x, y })
+    }
+  }, [showContextMenu, showColorPicker, contextMenuPos])
 
   const handleColorChange = (color: string) => {
     if (onUpdateColor) {
@@ -253,12 +295,13 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
       )}
 
       {/* Context Menu */}
-      {showContextMenu && (
+      {showContextMenu && createPortal(
         <>
           <div className="context-menu-overlay" onClick={() => setShowContextMenu(false)} />
           <div
+            ref={contextMenuRef}
             className="column-context-menu"
-            style={{ top: contextMenuPos.y, left: contextMenuPos.x }}
+            style={{ top: adjustedMenuPos.y, left: adjustedMenuPos.x }}
           >
             <button className="context-menu-item" onClick={() => setShowColorPicker(true)}>
               Change Color
@@ -270,19 +313,21 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
               Delete Column
             </button>
           </div>
-        </>
+        </>,
+        document.body
       )}
 
       {/* Color Picker */}
-      {showColorPicker && (
+      {showColorPicker && createPortal(
         <>
           <div className="context-menu-overlay" onClick={() => {
             setShowColorPicker(false)
             setShowContextMenu(false)
           }} />
           <div
+            ref={colorPickerRef}
             className="color-picker-menu"
-            style={{ top: contextMenuPos.y, left: contextMenuPos.x }}
+            style={{ top: adjustedMenuPos.y, left: adjustedMenuPos.x }}
           >
             <div className="color-picker-header">Select Color</div>
             <div className="color-picker-grid">
@@ -297,7 +342,8 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
               ))}
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
 
       {/* Delete Confirmation */}
