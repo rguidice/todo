@@ -13,10 +13,18 @@ export const loadTasks = async (): Promise<AppData> => {
     if (data) {
       console.log('Loaded tasks from file:', data)
       const parsed = JSON.parse(data) as AppData
-      // Add autoSort field to columns that don't have it (backward compatibility)
-      parsed.columns = parsed.columns.map(col => ({
+      // Add missing fields for backward compatibility
+      parsed.columns = parsed.columns.map((col, index) => ({
         ...col,
-        autoSort: col.autoSort ?? false
+        visible: col.visible ?? true,
+        order: col.order ?? index,
+        autoSort: col.autoSort ?? false,
+        tasks: (col.tasks ?? []).map(task => ({
+          ...task,
+          cleared: task.cleared ?? false,
+          pending: task.pending ?? false,
+          children: task.children ?? [],
+        }))
       }))
       return parsed
     }

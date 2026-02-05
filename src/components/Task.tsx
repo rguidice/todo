@@ -13,6 +13,7 @@ interface TaskProps {
   onUpdate?: (taskId: string, text: string) => void
   onAddSubtask?: (parentId: string, text: string, priority?: Priority) => void
   onUpdatePriority?: (taskId: string, priority: Priority) => void
+  onTogglePending?: (taskId: string) => void
 }
 
 const Task: React.FC<TaskProps> = ({
@@ -24,7 +25,8 @@ const Task: React.FC<TaskProps> = ({
   onDelete,
   onUpdate,
   onAddSubtask,
-  onUpdatePriority
+  onUpdatePriority,
+  onTogglePending
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isAddingSubtask, setIsAddingSubtask] = useState(false)
@@ -180,6 +182,9 @@ const Task: React.FC<TaskProps> = ({
         ) : (
           <span className="task-text" onDoubleClick={handleEdit}>{task.text}</span>
         )}
+        {task.pending && (
+          <span className="task-pending-badge">P</span>
+        )}
         {task.priority && (
           <span className="task-priority-badge" style={{ backgroundColor: priorityColor }}>
             {task.priority}
@@ -263,6 +268,7 @@ const Task: React.FC<TaskProps> = ({
           onUpdate={onUpdate}
           onAddSubtask={onAddSubtask}
           onUpdatePriority={onUpdatePriority}
+          onTogglePending={onTogglePending}
         />
       ))}
 
@@ -287,6 +293,13 @@ const Task: React.FC<TaskProps> = ({
               setShowContextMenu(false)
             }}>
               Delete Task
+            </button>
+            <div className="context-menu-divider"></div>
+            <button className="context-menu-item pending" onClick={() => {
+              if (onTogglePending) onTogglePending(task.id)
+              setShowContextMenu(false)
+            }}>
+              {task.pending ? 'Remove Pending' : 'Set Pending'}
             </button>
             <div className="context-menu-divider"></div>
             <div className="context-menu-header">Set Priority</div>

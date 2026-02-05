@@ -9,6 +9,7 @@ export interface Task {
   completed: boolean
   completedAt?: string // ISO 8601 timestamp when task was completed
   cleared: boolean // Whether task has been cleared from view (but kept for reports)
+  pending: boolean
   clearedAt?: string // ISO 8601 timestamp when task was cleared
   parentId: string | null
   children: string[]

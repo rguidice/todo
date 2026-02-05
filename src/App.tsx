@@ -7,7 +7,7 @@ import SettingsModal from './components/SettingsModal'
 import './App.css'
 
 function App() {
-  const { data, addColumn, deleteColumn, updateColumnColor, reorderColumns, addTask, addSubtask, toggleTask, deleteTask, updateTask, updateTaskPriority, toggleAutoSort, toggleColumnVisibility, clearCompleted } = useApp()
+  const { data, addColumn, deleteColumn, updateColumnColor, reorderColumns, addTask, addSubtask, toggleTask, deleteTask, updateTask, updateTaskPriority, togglePending, toggleAutoSort, toggleColumnVisibility, clearCompleted } = useApp()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [draggedColumnIndex, setDraggedColumnIndex] = useState<number | null>(null)
   const [showReportModal, setShowReportModal] = useState(false)
@@ -81,6 +81,7 @@ function App() {
                   onDeleteTask={deleteTask}
                   onUpdateTask={updateTask}
                   onUpdatePriority={updateTaskPriority}
+                  onTogglePending={togglePending}
                   onToggleAutoSort={toggleAutoSort}
                   onClearCompleted={clearCompleted}
                   onDeleteColumn={deleteColumn}

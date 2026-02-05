@@ -12,6 +12,7 @@ interface ColumnProps {
   onUpdateTask: (columnId: string, taskId: string, text: string) => void
   onAddSubtask: (columnId: string, parentId: string, text: string, priority?: Priority) => void
   onUpdatePriority: (columnId: string, taskId: string, priority: Priority) => void
+  onTogglePending: (columnId: string, taskId: string) => void
   onToggleAutoSort: (columnId: string) => void
   onClearCompleted: (columnId: string) => void
   onDeleteColumn?: (columnId: string) => void
@@ -23,7 +24,7 @@ interface ColumnProps {
   isDragging?: boolean
 }
 
-const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDeleteTask, onUpdateTask, onAddSubtask, onUpdatePriority, onToggleAutoSort, onClearCompleted, onDeleteColumn, onUpdateColor, onHideColumn, onDragStart, onDragOver, onDragEnd, isDragging }) => {
+const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDeleteTask, onUpdateTask, onAddSubtask, onUpdatePriority, onTogglePending, onToggleAutoSort, onClearCompleted, onDeleteColumn, onUpdateColor, onHideColumn, onDragStart, onDragOver, onDragEnd, isDragging }) => {
   const [isAdding, setIsAdding] = useState(false)
   const [newTaskText, setNewTaskText] = useState('')
   const [newTaskPriority, setNewTaskPriority] = useState<Priority>(null)
@@ -227,6 +228,7 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
             onUpdate={(taskId, text) => onUpdateTask(column.id, taskId, text)}
             onAddSubtask={(parentId, text, priority) => onAddSubtask(column.id, parentId, text, priority)}
             onUpdatePriority={(taskId, priority) => onUpdatePriority(column.id, taskId, priority)}
+            onTogglePending={(taskId) => onTogglePending(column.id, taskId)}
           />
         ))}
 
@@ -245,6 +247,7 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
                 onUpdate={(taskId, text) => onUpdateTask(column.id, taskId, text)}
                 onAddSubtask={(parentId, text, priority) => onAddSubtask(column.id, parentId, text, priority)}
                 onUpdatePriority={(taskId, priority) => onUpdatePriority(column.id, taskId, priority)}
+                onTogglePending={(taskId) => onTogglePending(column.id, taskId)}
               />
             ))}
             <button
