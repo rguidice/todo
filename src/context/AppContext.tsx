@@ -70,7 +70,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               // Check if task should be auto-cleared
               if (task.completed && task.completedAt) {
                 const completedTime = new Date(task.completedAt).getTime()
-                const cutoffTime = currentTime - AUTO_CLEAR_OPTIONS[duration].milliseconds
+
+                let cutoffTime: number
+                if (duration === 'overnight') {
+                  // Overnight: clear tasks completed before the most recent 3 AM
+                  const today3AM = new Date()
+                  today3AM.setHours(3, 0, 0, 0)
+                  cutoffTime = today3AM.getTime()
+                  if (currentTime < cutoffTime) {
+                    // Before 3 AM today, use yesterday's 3 AM
+                    cutoffTime -= 24 * 60 * 60 * 1000
+                  }
+                } else {
+                  cutoffTime = currentTime - AUTO_CLEAR_OPTIONS[duration].milliseconds
+                }
 
                 if (completedTime < cutoffTime) {
                   return { ...task, cleared: true, clearedAt: now }

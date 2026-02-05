@@ -79,6 +79,23 @@
   background-color: rgba(255, 255, 255, 0.1);
 }
 
+.clear-completed-header-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.clear-completed-header-btn:hover {
+  border-color: #fb4934;
+  color: #fb4934;
+  background-color: rgba(251, 73, 52, 0.1);
+}
+
 .tasks-list {
   flex: 1;
   overflow-y: auto;

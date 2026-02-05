@@ -54,15 +54,8 @@ This document outlines features and enhancements that were discussed but deferre
 
 ---
 
-### 4. Auto-Clear Completed Tasks
-**Description**: Automatically clear completed tasks after a set time period
-**Implementation**:
-- Setting: "Auto-clear completed tasks after X days"
-- Options: Never (default), 1 day, 3 days, 7 days, 30 days
-- Tasks archived to separate file before deletion
-- Configurable per-column or global
-
-**Priority**: Low - Manual clearing works fine, but some users may prefer automatic
+### 4. ~~Auto-Clear Completed Tasks~~ ✅ IMPLEMENTED (v1.0.1)
+**Status**: Implemented with configurable durations (1min, 5min, 1hr, 4hr, 24hr, 1week, never). Cleared tasks retained for 90 days for reporting purposes.
 
 ---
 
@@ -380,7 +373,7 @@ This document outlines features and enhancements that were discussed but deferre
 8. CLI tool
 
 ### Low Priority
-1. Auto-clear completed tasks
+1. ~~Auto-clear completed tasks~~ ✅ Implemented
 2. Task templates
 3. Daily/monthly reports
 4. Recurring tasks
@@ -393,6 +386,19 @@ This document outlines features and enhancements that were discussed but deferre
 1. Multi-device sync (consider file-based only)
 2. Collaboration features (different product)
 3. Mobile app (major effort)
+
+---
+
+## Known Issues / Bug Fixes
+
+### 1. Apple Security Warning on Install
+**Description**: macOS shows a security warning when installing the app
+**Likely Fix**: Requires a registered Apple Developer certificate for code signing
+**Priority**: Very Low
+
+### 2. macOS Tahoe App Icon
+**Description**: App icon doesn't display correctly on macOS Tahoe
+**Priority**: Very Low
 
 ---
 

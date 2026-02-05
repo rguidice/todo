@@ -77,6 +77,9 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
     }
   }, [isAdding])
 
+  // Check if any task (including subtasks) is completed and not yet cleared
+  const hasAnyCompleted = column.tasks.some(t => t.completed && !t.cleared)
+
   // Separate top-level tasks into uncompleted and completed (exclude cleared tasks)
   const topLevelTasks = column.tasks.filter(task => task.parentId === null && !task.cleared)
   let uncompletedTasks = topLevelTasks.filter(task => !task.completed)
@@ -183,6 +186,15 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
       >
         <h2 className="column-header">{column.name}</h2>
         <div className="column-header-buttons">
+          {hasAnyCompleted && (
+            <button
+              className="clear-completed-header-btn"
+              onClick={() => onClearCompleted(column.id)}
+              title="Clear completed tasks"
+            >
+              ✓
+            </button>
+          )}
           <button
             className="drag-handle"
             draggable
@@ -347,7 +359,7 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
       )}
 
       {/* Delete Confirmation */}
-      {showDeleteConfirm && (
+      {showDeleteConfirm && createPortal(
         <div className="dialog-overlay">
           <div className="dialog">
             <h3>Delete Column?</h3>
@@ -357,7 +369,8 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
               <button onClick={confirmDelete} className="danger">Delete</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

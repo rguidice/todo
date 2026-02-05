@@ -47,7 +47,7 @@ export const PRIORITY_COLORS = {
 }
 
 // Auto-clear duration options
-export type AutoClearDuration = '1min' | '5min' | '1hr' | '4hr' | '24hr' | '1week' | 'never'
+export type AutoClearDuration = '1min' | '5min' | '1hr' | '4hr' | '24hr' | 'overnight' | '1week' | 'never'
 
 export interface AppSettings {
   dataDirectory: string
@@ -60,6 +60,7 @@ export const AUTO_CLEAR_OPTIONS = {
   '1hr': { label: '1 hour', milliseconds: 60 * 60 * 1000 },
   '4hr': { label: '4 hours', milliseconds: 4 * 60 * 60 * 1000 },
   '24hr': { label: '24 hours', milliseconds: 24 * 60 * 60 * 1000 },
+  'overnight': { label: 'Overnight (3 AM)', milliseconds: 0 },
   '1week': { label: '1 week', milliseconds: 7 * 24 * 60 * 60 * 1000 },
   'never': { label: 'Never', milliseconds: Infinity }
 } as const

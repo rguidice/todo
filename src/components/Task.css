@@ -24,6 +24,44 @@
   transition: opacity 0.3s ease;
 }
 
+.task-collapse-arrow {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, color 0.2s;
+  transform: rotate(90deg);
+}
+
+.task-collapse-arrow.collapsed {
+  transform: rotate(0deg);
+}
+
+.task-collapse-arrow:hover {
+  color: var(--text-primary);
+}
+
+.task-collapse-spacer {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.task-children-count {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  margin-left: 0.25rem;
+  flex-shrink: 0;
+}
+
 .task-checkbox {
   flex-shrink: 0;
   width: 16px;

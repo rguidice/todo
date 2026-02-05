@@ -26,6 +26,7 @@ const Task: React.FC<TaskProps> = ({
   onAddSubtask,
   onUpdatePriority
 }) => {
+  const [isCollapsed, setIsCollapsed] = useState(false)
   const [isAddingSubtask, setIsAddingSubtask] = useState(false)
   const [newSubtaskText, setNewSubtaskText] = useState('')
   const [newSubtaskPriority, setNewSubtaskPriority] = useState<Priority>(null)
@@ -47,6 +48,7 @@ const Task: React.FC<TaskProps> = ({
   const canHaveChildren = depth < 2 // Max 3 levels: 0, 1, 2
 
   const handleAddSubtaskClick = () => {
+    setIsCollapsed(false)
     setIsAddingSubtask(true)
   }
 
@@ -145,6 +147,17 @@ const Task: React.FC<TaskProps> = ({
         }}
         onContextMenu={handleContextMenu}
       >
+        {children.length > 0 ? (
+          <button
+            className={`task-collapse-arrow ${isCollapsed ? 'collapsed' : ''}`}
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            aria-label={isCollapsed ? 'Expand subtasks' : 'Collapse subtasks'}
+          >
+            ▶
+          </button>
+        ) : (
+          <span className="task-collapse-spacer" />
+        )}
         <input
           type="checkbox"
           checked={task.completed}
@@ -171,6 +184,9 @@ const Task: React.FC<TaskProps> = ({
           <span className="task-priority-badge" style={{ backgroundColor: priorityColor }}>
             {task.priority}
           </span>
+        )}
+        {isCollapsed && children.length > 0 && (
+          <span className="task-children-count">({children.length})</span>
         )}
         {canHaveChildren && !task.completed ? (
           <button
@@ -235,7 +251,7 @@ const Task: React.FC<TaskProps> = ({
         </form>
       )}
 
-      {children.map(child => (
+      {!isCollapsed && children.map(child => (
         <Task
           key={child.id}
           task={child}
