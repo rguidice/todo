@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { Column as ColumnType, Priority, GRUVBOX_COLORS } from '../types'
+import { Column as ColumnType, Priority, GRUVBOX_COLORS, DueDateDisplayMode } from '../types'
 import Task from './Task'
 import './Column.css'
 
@@ -13,6 +13,9 @@ interface ColumnProps {
   onAddSubtask: (columnId: string, parentId: string, text: string, priority?: Priority) => void
   onUpdatePriority: (columnId: string, taskId: string, priority: Priority) => void
   onTogglePending: (columnId: string, taskId: string) => void
+  onSetDueDate: (columnId: string, taskId: string, dueDate: string) => void
+  onRemoveDueDate: (columnId: string, taskId: string) => void
+  dueDateDisplayMode?: DueDateDisplayMode
   onToggleAutoSort: (columnId: string) => void
   onClearCompleted: (columnId: string) => void
   onDeleteColumn?: (columnId: string) => void
@@ -24,7 +27,7 @@ interface ColumnProps {
   isDragging?: boolean
 }
 
-const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDeleteTask, onUpdateTask, onAddSubtask, onUpdatePriority, onTogglePending, onToggleAutoSort, onClearCompleted, onDeleteColumn, onUpdateColor, onHideColumn, onDragStart, onDragOver, onDragEnd, isDragging }) => {
+const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDeleteTask, onUpdateTask, onAddSubtask, onUpdatePriority, onTogglePending, onSetDueDate, onRemoveDueDate, dueDateDisplayMode, onToggleAutoSort, onClearCompleted, onDeleteColumn, onUpdateColor, onHideColumn, onDragStart, onDragOver, onDragEnd, isDragging }) => {
   const [isAdding, setIsAdding] = useState(false)
   const [newTaskText, setNewTaskText] = useState('')
   const [newTaskPriority, setNewTaskPriority] = useState<Priority>(null)
@@ -223,12 +226,15 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
             task={task}
             allTasks={column.tasks}
             autoSort={column.autoSort}
+            dueDateDisplayMode={dueDateDisplayMode}
             onToggle={(taskId) => onToggleTask(column.id, taskId)}
             onDelete={(taskId) => onDeleteTask(column.id, taskId)}
             onUpdate={(taskId, text) => onUpdateTask(column.id, taskId, text)}
             onAddSubtask={(parentId, text, priority) => onAddSubtask(column.id, parentId, text, priority)}
             onUpdatePriority={(taskId, priority) => onUpdatePriority(column.id, taskId, priority)}
             onTogglePending={(taskId) => onTogglePending(column.id, taskId)}
+            onSetDueDate={(taskId, dueDate) => onSetDueDate(column.id, taskId, dueDate)}
+            onRemoveDueDate={(taskId) => onRemoveDueDate(column.id, taskId)}
           />
         ))}
 
@@ -242,12 +248,15 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
                 task={task}
                 allTasks={column.tasks}
                 autoSort={column.autoSort}
+                dueDateDisplayMode={dueDateDisplayMode}
                 onToggle={(taskId) => onToggleTask(column.id, taskId)}
                 onDelete={(taskId) => onDeleteTask(column.id, taskId)}
                 onUpdate={(taskId, text) => onUpdateTask(column.id, taskId, text)}
                 onAddSubtask={(parentId, text, priority) => onAddSubtask(column.id, parentId, text, priority)}
                 onUpdatePriority={(taskId, priority) => onUpdatePriority(column.id, taskId, priority)}
                 onTogglePending={(taskId) => onTogglePending(column.id, taskId)}
+                onSetDueDate={(taskId, dueDate) => onSetDueDate(column.id, taskId, dueDate)}
+                onRemoveDueDate={(taskId) => onRemoveDueDate(column.id, taskId)}
               />
             ))}
             <button

@@ -15,6 +15,8 @@ interface AppContextType {
   updateTask: (columnId: string, taskId: string, text: string) => void
   updateTaskPriority: (columnId: string, taskId: string, priority: Priority) => void
   togglePending: (columnId: string, taskId: string) => void
+  setDueDate: (columnId: string, taskId: string, dueDate: string) => void
+  removeDueDate: (columnId: string, taskId: string) => void
   toggleAutoSort: (columnId: string) => void
   toggleColumnVisibility: (columnId: string) => void
   clearCompleted: (columnId: string) => void
@@ -401,6 +403,46 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }))
   }
 
+  const setDueDate = (columnId: string, taskId: string, dueDate: string) => {
+    setData(prev => ({
+      ...prev,
+      columns: prev.columns.map(col => {
+        if (col.id === columnId) {
+          return {
+            ...col,
+            tasks: col.tasks.map(task =>
+              task.id === taskId
+                ? { ...task, dueDate }
+                : task
+            )
+          }
+        }
+        return col
+      })
+    }))
+  }
+
+  const removeDueDate = (columnId: string, taskId: string) => {
+    setData(prev => ({
+      ...prev,
+      columns: prev.columns.map(col => {
+        if (col.id === columnId) {
+          return {
+            ...col,
+            tasks: col.tasks.map(task => {
+              if (task.id === taskId) {
+                const { dueDate, ...rest } = task
+                return rest as Task
+              }
+              return task
+            })
+          }
+        }
+        return col
+      })
+    }))
+  }
+
   const toggleAutoSort = (columnId: string) => {
     setData(prev => ({
       ...prev,
@@ -459,7 +501,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }
 
   return (
-    <AppContext.Provider value={{ data, addColumn, deleteColumn, updateColumnColor, reorderColumns, addTask, addSubtask, toggleTask, deleteTask, updateTask, updateTaskPriority, togglePending, toggleAutoSort, toggleColumnVisibility, clearCompleted }}>
+    <AppContext.Provider value={{ data, addColumn, deleteColumn, updateColumnColor, reorderColumns, addTask, addSubtask, toggleTask, deleteTask, updateTask, updateTaskPriority, togglePending, setDueDate, removeDueDate, toggleAutoSort, toggleColumnVisibility, clearCompleted }}>
       {children}
     </AppContext.Provider>
   )

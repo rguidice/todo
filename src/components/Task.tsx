@@ -1,6 +1,8 @@
 import React, { useState, useRef, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { Task as TaskType, PRIORITY_COLORS, Priority } from '../types'
+import { Task as TaskType, PRIORITY_COLORS, Priority, DueDateDisplayMode } from '../types'
+import { getWorkingDaysRemaining, getDueDateColor, formatShortDate, formatWorkingDays } from '../utils/workingDays'
+import DueDatePickerModal from './DueDatePickerModal'
 import './Task.css'
 
 interface TaskProps {
@@ -8,12 +10,15 @@ interface TaskProps {
   allTasks: TaskType[]
   autoSort?: boolean
   depth?: number
+  dueDateDisplayMode?: DueDateDisplayMode
   onToggle: (taskId: string) => void
   onDelete: (taskId: string) => void
   onUpdate?: (taskId: string, text: string) => void
   onAddSubtask?: (parentId: string, text: string, priority?: Priority) => void
   onUpdatePriority?: (taskId: string, priority: Priority) => void
   onTogglePending?: (taskId: string) => void
+  onSetDueDate?: (taskId: string, dueDate: string) => void
+  onRemoveDueDate?: (taskId: string) => void
 }
 
 const Task: React.FC<TaskProps> = ({
@@ -21,12 +26,15 @@ const Task: React.FC<TaskProps> = ({
   allTasks,
   autoSort = false,
   depth = 0,
+  dueDateDisplayMode = 'date',
   onToggle,
   onDelete,
   onUpdate,
   onAddSubtask,
   onUpdatePriority,
-  onTogglePending
+  onTogglePending,
+  onSetDueDate,
+  onRemoveDueDate
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isAddingSubtask, setIsAddingSubtask] = useState(false)
@@ -37,6 +45,7 @@ const Task: React.FC<TaskProps> = ({
   const [adjustedMenuPos, setAdjustedMenuPos] = useState({ x: 0, y: 0 })
   const [isEditing, setIsEditing] = useState(false)
   const [editText, setEditText] = useState(task.text)
+  const [showDueDatePicker, setShowDueDatePicker] = useState(false)
   const contextMenuRef = useRef<HTMLDivElement>(null)
 
   let children = allTasks.filter(t => t.parentId === task.id && !t.cleared)
@@ -185,6 +194,18 @@ const Task: React.FC<TaskProps> = ({
         {task.pending && (
           <span className="task-pending-badge">P</span>
         )}
+        {task.dueDate && !task.completed && (() => {
+          const workingDays = getWorkingDaysRemaining(task.dueDate)
+          const color = getDueDateColor(workingDays)
+          const text = dueDateDisplayMode === 'date'
+            ? formatShortDate(task.dueDate)
+            : formatWorkingDays(workingDays)
+          return (
+            <span className="task-due-date-badge" style={{ backgroundColor: color }}>
+              {text}
+            </span>
+          )
+        })()}
         {task.priority && (
           <span className="task-priority-badge" style={{ backgroundColor: priorityColor }}>
             {task.priority}
@@ -263,14 +284,28 @@ const Task: React.FC<TaskProps> = ({
           allTasks={allTasks}
           autoSort={autoSort}
           depth={depth + 1}
+          dueDateDisplayMode={dueDateDisplayMode}
           onToggle={onToggle}
           onDelete={onDelete}
           onUpdate={onUpdate}
           onAddSubtask={onAddSubtask}
           onUpdatePriority={onUpdatePriority}
           onTogglePending={onTogglePending}
+          onSetDueDate={onSetDueDate}
+          onRemoveDueDate={onRemoveDueDate}
         />
       ))}
+
+      {showDueDatePicker && (
+        <DueDatePickerModal
+          currentDate={task.dueDate}
+          onSelect={(date) => {
+            if (onSetDueDate) onSetDueDate(task.id, date)
+            setShowDueDatePicker(false)
+          }}
+          onClose={() => setShowDueDatePicker(false)}
+        />
+      )}
 
       {showContextMenu && createPortal(
         <>
@@ -301,6 +336,30 @@ const Task: React.FC<TaskProps> = ({
             }}>
               {task.pending ? 'Remove Pending' : 'Set Pending'}
             </button>
+            <div className="context-menu-divider"></div>
+            {task.dueDate ? (
+              <>
+                <button className="context-menu-item due-date" onClick={() => {
+                  setShowDueDatePicker(true)
+                  setShowContextMenu(false)
+                }}>
+                  Change Due Date
+                </button>
+                <button className="context-menu-item danger" onClick={() => {
+                  if (onRemoveDueDate) onRemoveDueDate(task.id)
+                  setShowContextMenu(false)
+                }}>
+                  Remove Due Date
+                </button>
+              </>
+            ) : (
+              <button className="context-menu-item due-date" onClick={() => {
+                setShowDueDatePicker(true)
+                setShowContextMenu(false)
+              }}>
+                Set Due Date
+              </button>
+            )}
             <div className="context-menu-divider"></div>
             <div className="context-menu-header">Set Priority</div>
             <button className="context-menu-item" onClick={() => handleSetPriority(null)}>

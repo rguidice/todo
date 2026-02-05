@@ -9,6 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 interface AppSettings {
   dataDirectory: string
   autoClearDuration: '1min' | '5min' | '1hr' | '4hr' | '24hr' | '1week' | 'never'
+  dueDateDisplayMode: 'date' | 'days'
 }
 
 const SETTINGS_FILE = path.join(app.getPath('userData'), 'settings.json')
@@ -25,13 +26,15 @@ async function loadSettings(): Promise<AppSettings> {
     // Ensure all required fields have defaults
     return {
       dataDirectory: settings.dataDirectory || DEFAULT_DATA_DIR,
-      autoClearDuration: settings.autoClearDuration || 'never'
+      autoClearDuration: settings.autoClearDuration || 'never',
+      dueDateDisplayMode: settings.dueDateDisplayMode || 'date'
     }
   } catch {
     // Return default settings if file doesn't exist
     return {
       dataDirectory: DEFAULT_DATA_DIR,
-      autoClearDuration: 'never'
+      autoClearDuration: 'never',
+      dueDateDisplayMode: 'date'
     }
   }
 }

@@ -10,6 +10,7 @@ export interface Task {
   completedAt?: string // ISO 8601 timestamp when task was completed
   cleared: boolean // Whether task has been cleared from view (but kept for reports)
   pending: boolean
+  dueDate?: string // ISO 8601 date string YYYY-MM-DD
   clearedAt?: string // ISO 8601 timestamp when task was cleared
   parentId: string | null
   children: string[]
@@ -47,12 +48,21 @@ export const PRIORITY_COLORS = {
   P2: '#928374', // Gray (low)
 }
 
+export type DueDateDisplayMode = 'date' | 'days'
+
+export const DUE_DATE_COLORS = {
+  normal: '#928374',  // Gruvbox gray - neutral (3+ working days)
+  warning: '#d79921', // Gruvbox yellow (1-2 working days)
+  urgent: '#fb4934',  // Gruvbox red (day-of / overdue)
+}
+
 // Auto-clear duration options
 export type AutoClearDuration = '1min' | '5min' | '1hr' | '4hr' | '24hr' | 'overnight' | '1week' | 'never'
 
 export interface AppSettings {
   dataDirectory: string
   autoClearDuration: AutoClearDuration
+  dueDateDisplayMode: DueDateDisplayMode
 }
 
 export const AUTO_CLEAR_OPTIONS = {

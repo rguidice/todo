@@ -21,6 +21,7 @@
   "license": "MIT",
   "dependencies": {
     "react": "^18.2.0",
+    "react-day-picker": "^9.13.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {

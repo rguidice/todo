@@ -115,6 +115,39 @@
   line-height: 1.5;
 }
 
+.due-date-display-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.display-mode-btn {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid var(--border);
+  background-color: transparent;
+  color: var(--text-primary);
+}
+
+.display-mode-btn:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.display-mode-btn.active {
+  background-color: var(--accent-blue);
+  border-color: var(--accent-blue);
+  color: var(--bg-primary);
+  font-weight: 500;
+}
+
+.display-mode-btn.active:hover {
+  background-color: #5a9fa8;
+  border-color: #5a9fa8;
+}
+
 .settings-modal-buttons {
   display: flex;
   gap: 0.75rem;

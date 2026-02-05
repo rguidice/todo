@@ -42,6 +42,7 @@ contextBridge.exposeInMainWorld('electron', {
 export interface AppSettings {
   dataDirectory: string
   autoClearDuration: '1min' | '5min' | '1hr' | '4hr' | '24hr' | '1week' | 'never'
+  dueDateDisplayMode: 'date' | 'days'
 }
 
 export interface ElectronAPI {

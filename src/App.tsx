@@ -1,17 +1,33 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useApp } from './context/AppContext'
 import Column from './components/Column'
 import Sidebar from './components/Sidebar'
 import ReportModal from './components/ReportModal'
 import SettingsModal from './components/SettingsModal'
+import { DueDateDisplayMode } from './types'
 import './App.css'
 
 function App() {
-  const { data, addColumn, deleteColumn, updateColumnColor, reorderColumns, addTask, addSubtask, toggleTask, deleteTask, updateTask, updateTaskPriority, togglePending, toggleAutoSort, toggleColumnVisibility, clearCompleted } = useApp()
+  const { data, addColumn, deleteColumn, updateColumnColor, reorderColumns, addTask, addSubtask, toggleTask, deleteTask, updateTask, updateTaskPriority, togglePending, setDueDate, removeDueDate, toggleAutoSort, toggleColumnVisibility, clearCompleted } = useApp()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [draggedColumnIndex, setDraggedColumnIndex] = useState<number | null>(null)
   const [showReportModal, setShowReportModal] = useState(false)
   const [showSettingsModal, setShowSettingsModal] = useState(false)
+  const [dueDateDisplayMode, setDueDateDisplayMode] = useState<DueDateDisplayMode>('date')
+
+  // Load due date display mode from settings
+  const loadDueDateDisplayMode = async () => {
+    try {
+      const settings = await window.electron.getSettings()
+      setDueDateDisplayMode(settings.dueDateDisplayMode || 'date')
+    } catch (error) {
+      console.error('Failed to load due date display mode:', error)
+    }
+  }
+
+  useEffect(() => {
+    loadDueDateDisplayMode()
+  }, [])
 
   const visibleColumns = data.columns.filter(col => col.visible)
 
@@ -82,6 +98,9 @@ function App() {
                   onUpdateTask={updateTask}
                   onUpdatePriority={updateTaskPriority}
                   onTogglePending={togglePending}
+                  onSetDueDate={setDueDate}
+                  onRemoveDueDate={removeDueDate}
+                  dueDateDisplayMode={dueDateDisplayMode}
                   onToggleAutoSort={toggleAutoSort}
                   onClearCompleted={clearCompleted}
                   onDeleteColumn={deleteColumn}
@@ -108,7 +127,10 @@ function App() {
 
       {showSettingsModal && (
         <SettingsModal
-          onClose={() => setShowSettingsModal(false)}
+          onClose={() => {
+            setShowSettingsModal(false)
+            loadDueDateDisplayMode()
+          }}
         />
       )}
     </div>
