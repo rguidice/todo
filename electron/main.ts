@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, screen, dialog } from 'electron'
 import path from 'path'
+import os from 'os'
 import { fileURLToPath } from 'url'
 import fs from 'fs/promises'
 
@@ -179,16 +180,25 @@ async function ensureDataDir() {
   }
 }
 
+// Resolve a filename within a base directory and ensure it doesn't escape via traversal
+function safePath(baseDir: string, filename: string): string {
+  const resolved = path.resolve(baseDir, filename)
+  if (!resolved.startsWith(baseDir + path.sep) && resolved !== baseDir) {
+    throw new Error('Path traversal detected')
+  }
+  return resolved
+}
+
 // IPC handlers for file operations
 ipcMain.handle('save-file', async (_event, filename: string, data: string) => {
   await ensureDataDir()
-  const filePath = path.join(DATA_DIR, filename)
+  const filePath = safePath(DATA_DIR, filename)
   await fs.writeFile(filePath, data, 'utf-8')
 })
 
 ipcMain.handle('load-file', async (_event, filename: string) => {
   await ensureDataDir()
-  const filePath = path.join(DATA_DIR, filename)
+  const filePath = safePath(DATA_DIR, filename)
   try {
     const data = await fs.readFile(filePath, 'utf-8')
     return data
@@ -209,14 +219,14 @@ ipcMain.handle('save-report', async (_event, filename: string, data: string) => 
     await fs.mkdir(reportsDir, { recursive: true })
   }
 
-  const filePath = path.join(reportsDir, filename)
+  const filePath = safePath(reportsDir, filename)
   await fs.writeFile(filePath, data, 'utf-8')
 })
 
 ipcMain.handle('check-report-exists', async (_event, filename: string) => {
   await ensureDataDir()
   const reportsDir = path.join(DATA_DIR, 'reports')
-  const filePath = path.join(reportsDir, filename)
+  const filePath = safePath(reportsDir, filename)
 
   try {
     await fs.access(filePath)
@@ -232,8 +242,15 @@ ipcMain.handle('get-settings', async () => {
 })
 
 ipcMain.handle('update-settings', async (_event, settings: AppSettings) => {
+  // Validate dataDirectory is an absolute path under the user's home directory
+  const homeDir = os.homedir()
+  const resolvedDir = path.resolve(settings.dataDirectory)
+  if (!resolvedDir.startsWith(homeDir + path.sep) && resolvedDir !== homeDir) {
+    throw new Error('Data directory must be within the user home directory')
+  }
+  settings.dataDirectory = resolvedDir
   await saveSettings(settings)
-  DATA_DIR = settings.dataDirectory
+  DATA_DIR = resolvedDir
   console.log('Data directory updated to:', DATA_DIR)
 })
 
