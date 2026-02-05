@@ -8,12 +8,17 @@ A local-first, fast, minimal to-do list application built with Electron, React, 
 
 ## Features
 
-- Multi-column kanban-style organization
-- Hierarchical tasks (3 levels: parent → child → grandchild)
-- Priority system (P0/P1/P2)
-- Weekly reporting in Markdown format
-- Dark Gruvbox theme
-- Local-only storage (no cloud sync)
+- **Multi-column kanban** organization with drag-to-reorder, color picker, and show/hide
+- **Hierarchical tasks** (3 levels: parent → child → grandchild) with collapsible subtasks
+- **Priority system** (P0/P1/P2) with color-coded badges and per-column auto-sort
+- **Pending indicator** — yellow "P" badge toggled via right-click
+- **Due dates** — color-coded badge (gray/yellow/red based on working days remaining), calendar picker, configurable display (short date or working days)
+- **Auto-clear** completed tasks on a configurable schedule (1min to 1 week, overnight at 3 AM, or never)
+- **Report generation** from custom date ranges in Markdown format
+- **Settings** — configurable data directory, auto-clear duration, due date display mode
+- **Dark Gruvbox theme** with custom CSS properties
+- **Local-only storage** (no cloud sync) with auto-save on every change
+- **Window state persistence** (size, position, maximized)
 
 ## Development
 
@@ -66,20 +71,19 @@ Builds and packages the app into a distributable .dmg file (macOS) in the `relea
 
 ```
 todo-app/
-├── electron/          # Electron main process
-│   ├── main.ts       # Main process entry
-│   └── preload.ts    # Preload script for IPC
-├── src/              # React renderer
-│   ├── components/   # UI components
-│   ├── hooks/        # Custom React hooks
-│   ├── utils/        # Utilities
-│   ├── types/        # TypeScript types
-│   ├── App.tsx       # Main app component
-│   └── main.tsx      # Renderer entry point
-├── docs/             # Documentation
-│   ├── todo_spec_v1.md   # v1 specification
-│   └── todo_spec_v2.md   # Future features
-└── CLAUDE.md         # AI development guide
+├── electron/              # Electron main process
+│   ├── main.ts           # Main process, IPC handlers, settings
+│   └── preload.ts        # Secure IPC bridge (contextBridge)
+├── src/                  # React renderer
+│   ├── components/       # UI components (Task, Column, Sidebar, modals)
+│   ├── context/          # AppContext (global state management)
+│   ├── utils/            # Storage, working day calculations
+│   ├── types/            # TypeScript interfaces and constants
+│   ├── App.tsx           # Main app component
+│   └── main.tsx          # Renderer entry point
+└── docs/                 # Documentation
+    ├── CLAUDE.md         # AI development guide
+    └── todo_spec_v2.md   # Future features spec
 ```
 
 ## Tech Stack
@@ -88,6 +92,7 @@ todo-app/
 - **React** - UI library
 - **TypeScript** - Type safety
 - **Vite** - Build tool and dev server
+- **react-day-picker** - Calendar date picker
 - **Local JSON** - Data storage
 
 ## License

@@ -167,7 +167,7 @@ This document outlines features and enhancements that were discussed but deferre
 **Features**:
 - Daily summary report
 - Monthly rollup report
-- Custom date range reports
+- ~~Custom date range reports~~ ✅ Implemented — reports support arbitrary date ranges
 - Export to different formats (PDF, CSV)
 - Charts/visualizations of completion trends
 
@@ -348,7 +348,7 @@ This document outlines features and enhancements that were discussed but deferre
 - Move to different column
 - Copy task text
 - Add note
-- Set due date
+- ~~Set due date~~ ✅ Implemented (v1.0.2) — Set/Change/Remove Due Date with calendar picker
 - Archive task
 
 **Priority**: Medium - Depends on which features are implemented
@@ -371,16 +371,26 @@ This document outlines features and enhancements that were discussed but deferre
 6. Task notes/details
 7. Backup & restore system
 8. CLI tool
+9. Context menu enhancements (remaining: duplicate, move, copy text, etc.)
 
 ### Low Priority
-1. ~~Auto-clear completed tasks~~ ✅ Implemented
+1. ~~Auto-clear completed tasks~~ ✅ Implemented (v1.0.1)
 2. Task templates
-3. Daily/monthly reports
+3. Daily/monthly reports (custom date range ✅, remaining: daily/monthly presets, PDF/CSV export)
 4. Recurring tasks
 5. Pomodoro timer
 6. Customizable themes
 7. Archive system
 8. Statistics dashboard
+
+### Already Implemented
+1. ✅ Auto-clear completed tasks (v1.0.1)
+2. ✅ Due dates with color-coded badges and calendar picker (v1.0.2)
+3. ✅ Pending task indicator (v1.0.2)
+4. ✅ Collapsible subtasks (v1.0.2)
+5. ✅ Manual clear completed button (v1.0.2)
+6. ✅ Custom date range reports (v1.0.1)
+7. ✅ Configurable data directory (v1.0.1)
 
 ### Very Low / Out of Scope
 1. Multi-device sync (consider file-based only)
