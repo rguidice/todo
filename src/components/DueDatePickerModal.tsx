@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import ReactDOM from 'react-dom'
 import { DayPicker } from 'react-day-picker'
 import './DueDatePickerModal.css'
 
@@ -21,7 +22,7 @@ const DueDatePickerModal: React.FC<DueDatePickerModalProps> = ({ currentDate, on
     }
   }
 
-  return (
+  return ReactDOM.createPortal(
     <div className="due-date-modal-overlay" onClick={onClose}>
       <div className="due-date-modal" onClick={(e) => e.stopPropagation()}>
         <h2 className="due-date-modal-title">
@@ -47,7 +48,8 @@ const DueDatePickerModal: React.FC<DueDatePickerModalProps> = ({ currentDate, on
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
