@@ -10,7 +10,8 @@ A local-first, fast, minimal to-do list application built with Electron, React, 
 
 - **Multi-column kanban** organization with drag-to-reorder, color picker, and show/hide
 - **Hierarchical tasks** (3 levels: parent → child → grandchild) with collapsible subtasks
-- **Priority system** (P0/P1/P2) with color-coded badges and per-column auto-sort
+- **Today panel** — collapsible side panel to curate a focused list of today's priority tasks from across all columns, with daily reset and "Restore Yesterday" option
+- **Priority system** (P0/P1/P2) with color-coded badges and per-column auto-sort (pending items sort below same-priority)
 - **Pending indicator** — yellow "P" badge toggled via right-click
 - **Due dates** — color-coded badge (gray/yellow/red based on working days remaining), calendar picker, configurable display (short date or working days)
 - **Auto-clear** completed tasks on a configurable schedule (1min to 1 week, overnight at 3 AM, or never)

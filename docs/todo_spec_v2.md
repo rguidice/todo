@@ -391,6 +391,7 @@ This document outlines features and enhancements that were discussed but deferre
 5. ✅ Manual clear completed button (v1.0.2)
 6. ✅ Custom date range reports (v1.0.1)
 7. ✅ Configurable data directory (v1.0.1)
+8. ✅ Today panel — collapsible focus panel with daily reset and restore yesterday (v1.0.4)
 
 ### Very Low / Out of Scope
 1. Multi-device sync (consider file-based only)

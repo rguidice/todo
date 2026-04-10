@@ -29,6 +29,7 @@ A local-first, fast, minimal todo app built with Electron + React + TypeScript. 
 ### Storage Files
 - `tasks.json` — Source of truth, auto-saves on every change
 - `tasks.md` — Auto-generated, human-readable format for grep/search
+- `today.json` — Today panel state (task refs, yesterday snapshot), resets daily
 - `reports/completed_*.md` — Generated completion reports
 - `settings.json` — App settings (stored in system userData directory)
 - `window-state.json` — Window position/size persistence
@@ -85,6 +86,7 @@ src/
 │   ├── Task.tsx/css        # Task rendering, badges, context menu, inline editing
 │   ├── Column.tsx/css      # Column with task lists, sorting, color picker
 │   ├── Sidebar.tsx/css     # Column management, visibility toggles
+│   ├── TodayPanel.tsx/css  # Collapsible "Today" focus panel
 │   ├── ReportModal.tsx/css # Report generation with date range
 │   ├── SettingsModal.tsx/css   # Settings UI (data dir, auto-clear, due date display)
 │   └── DueDatePickerModal.tsx/css  # Calendar date picker modal
@@ -93,7 +95,7 @@ src/
 ├── types/
 │   └── index.ts        # TypeScript interfaces, constants, color palettes
 └── utils/
-    ├── storage.ts      # Load/save tasks, markdown generation
+    ├── storage.ts      # Load/save tasks & today data, markdown generation
     └── workingDays.ts  # Working day calculations, due date formatting
 ```
 
@@ -112,12 +114,24 @@ src/
 - Collapsible subtasks with child count indicator
 - Add subtask via `+` button or right-click context menu
 
+### Today Panel
+- Collapsible side panel toggled via "Today" button in top bar
+- Curate a focused list of tasks from across all columns
+- Add/remove tasks via right-click context menu ("Add to Today" / "Remove from Today")
+- Tasks grouped by source column with colored dot headers
+- Completing a task (from panel or column) auto-removes from Today
+- Data stored in `today.json` with `TodayTaskRef` (columnId + taskId) references
+- Daily reset: list clears at start of new day, previous day saved as snapshot
+- "Restore Yesterday" button merges previous day's refs (filters out stale/completed)
+- Stale refs auto-cleaned on render (deleted/cleared tasks)
+- Synced with `toggleTask`, `deleteTask`, `deleteColumn` for cleanup
+
 ### Priority System
 - P0 (High) — Orange `#d65d0e`
-- P1 (Medium) — Blue `#458588`
-- P2 (Low) — Gray `#928374`
+- P1 (Medium) — Blue `#6d9da1`
+- P2 (Low) — Gray `#bdae93`
 - None — No special styling
-- Per-column auto-sort toggle (sorts by priority)
+- Per-column auto-sort toggle (sorts by priority, pending items below same-priority)
 - Set via right-click context menu
 
 ### Pending Indicator
@@ -184,10 +198,12 @@ src/
 - Persists size/position/maximized state between sessions
 - Hidden title bar with macOS traffic lights at (10, 10)
 - Toggleable sidebar (left) for column management
+- Toggleable Today panel (left, between sidebar and columns) for daily focus
 
 ## Important Design Decisions
 
-1. **Subtask Priority:** Does NOT inherit parent's priority (defaults to none)
+1. **Subtask Completion Timestamps:** Completing a parent preserves original `completedAt` for subtasks already completed
+2. **Subtask Priority:** Does NOT inherit parent's priority (defaults to none)
 2. **Due Date Field:** Optional (`dueDate?: string`), no backward compat issue — existing tasks without it render fine
 3. **Working Days:** Only Mon-Fri count; Friday before Monday due = 1 working day
 4. **Cleared vs Deleted:** Cleared tasks are hidden but retained 90 days for reports
