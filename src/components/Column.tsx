@@ -93,7 +93,10 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
   if (column.autoSort) {
     const priorityOrder = { 'P0': 0, 'P1': 1, 'P2': 2, null: 3 }
     const sortByPriority = (a: any, b: any) => {
-      return priorityOrder[a.priority] - priorityOrder[b.priority]
+      const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority]
+      if (priorityDiff !== 0) return priorityDiff
+      // Pending items sort below non-pending items of the same priority
+      return (a.pending ? 1 : 0) - (b.pending ? 1 : 0)
     }
     uncompletedTasks = [...uncompletedTasks].sort(sortByPriority)
     completedTasks = [...completedTasks].sort(sortByPriority)

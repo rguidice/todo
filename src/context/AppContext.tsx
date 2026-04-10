@@ -253,11 +253,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
           return {
             ...col,
-            tasks: col.tasks.map(task =>
-              affectedIds.has(task.id)
-                ? { ...task, completed: newCompletedState, completedAt: completionTimestamp }
-                : task
-            )
+            tasks: col.tasks.map(task => {
+              if (!affectedIds.has(task.id)) return task
+              // Preserve original completedAt for subtasks that were already completed
+              const preserveTimestamp = newCompletedState && task.completed && task.completedAt
+              return {
+                ...task,
+                completed: newCompletedState,
+                completedAt: preserveTimestamp ? task.completedAt : completionTimestamp
+              }
+            })
           }
         }
         return col
