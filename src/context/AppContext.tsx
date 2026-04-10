@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
-import { AppData, Column, Task, Priority, AppSettings, AUTO_CLEAR_OPTIONS, MAX_RETENTION_MS } from '../types'
-import { loadTasks, saveTasks } from '../utils/storage'
+import { AppData, Column, Task, Priority, AppSettings, AUTO_CLEAR_OPTIONS, MAX_RETENTION_MS, TodayData } from '../types'
+import { loadTasks, saveTasks, loadTodayData, saveTodayData, getTodayDateString } from '../utils/storage'
 
 interface AppContextType {
   data: AppData
@@ -20,6 +20,10 @@ interface AppContextType {
   toggleAutoSort: (columnId: string) => void
   toggleColumnVisibility: (columnId: string) => void
   clearCompleted: (columnId: string) => void
+  todayData: TodayData
+  addToToday: (columnId: string, taskId: string) => void
+  removeFromToday: (columnId: string, taskId: string) => void
+  restoreYesterday: () => void
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined)
@@ -34,14 +38,31 @@ export const useApp = () => {
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [data, setData] = useState<AppData>({ columns: [] })
+  const [todayData, setTodayData] = useState<TodayData>({ date: getTodayDateString(), tasks: [], yesterday: null })
   const isFirstRender = useRef(true)
+  const isTodayFirstRender = useRef(true)
 
   // Load data on mount
   useEffect(() => {
     const loadData = async () => {
       const loadedData = await loadTasks()
       setData(loadedData)
+
+      // Load today data and handle day reset
+      const loaded = await loadTodayData()
+      const today = getTodayDateString()
+      if (loaded.date !== today) {
+        setTodayData({
+          date: today,
+          tasks: [],
+          yesterday: { date: loaded.date, tasks: loaded.tasks }
+        })
+      } else {
+        setTodayData(loaded)
+      }
+
       isFirstRender.current = false
+      isTodayFirstRender.current = false
     }
     loadData()
   }, [])
@@ -52,6 +73,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       saveTasks(data)
     }
   }, [data])
+
+  // Auto-save today data whenever it changes
+  useEffect(() => {
+    if (!isTodayFirstRender.current) {
+      saveTodayData(todayData)
+    }
+  }, [todayData])
 
   // Auto-clear completed tasks based on settings and permanently delete old cleared tasks
   useEffect(() => {
@@ -151,8 +179,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // Check immediately on mount
     checkAndClearCompletedTasks()
 
-    // Then check every minute
-    const interval = setInterval(checkAndClearCompletedTasks, 60 * 1000)
+    // Then check every minute (also checks for day rollover on today panel)
+    const interval = setInterval(() => {
+      checkAndClearCompletedTasks()
+      // Day rollover check for Today panel
+      setTodayData(prev => {
+        const today = getTodayDateString()
+        if (prev.date !== today) {
+          return {
+            date: today,
+            tasks: [],
+            yesterday: { date: prev.date, tasks: prev.tasks }
+          }
+        }
+        return prev
+      })
+    }, 60 * 1000)
 
     return () => clearInterval(interval)
   }, [])
@@ -251,6 +293,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           const descendantIds = getDescendantIds(targetTask)
           const affectedIds = new Set([taskId, ...descendantIds])
 
+          // Remove completed tasks from Today panel
+          if (newCompletedState) {
+            setTodayData(prev => ({
+              ...prev,
+              tasks: prev.tasks.filter(ref => !affectedIds.has(ref.taskId) || ref.columnId !== columnId)
+            }))
+          }
+
           return {
             ...col,
             tasks: col.tasks.map(task => {
@@ -290,6 +340,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
           const descendantIds = getDescendantIds(targetTask)
           const idsToDelete = new Set([taskId, ...descendantIds])
+
+          // Remove deleted tasks from Today panel
+          setTodayData(prev => ({
+            ...prev,
+            tasks: prev.tasks.filter(ref => !idsToDelete.has(ref.taskId) || ref.columnId !== columnId)
+          }))
 
           // Also remove this task from its parent's children array
           const updatedTasks = col.tasks
@@ -460,6 +516,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }
 
   const deleteColumn = (columnId: string) => {
+    setTodayData(prev => ({
+      ...prev,
+      tasks: prev.tasks.filter(ref => ref.columnId !== columnId)
+    }))
     setData(prev => ({
       ...prev,
       columns: prev.columns.filter(col => col.id !== columnId)
@@ -505,8 +565,40 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     })
   }
 
+  const addToToday = (columnId: string, taskId: string) => {
+    setTodayData(prev => {
+      const alreadyExists = prev.tasks.some(ref => ref.columnId === columnId && ref.taskId === taskId)
+      if (alreadyExists) return prev
+      return { ...prev, tasks: [...prev.tasks, { columnId, taskId }] }
+    })
+  }
+
+  const removeFromToday = (columnId: string, taskId: string) => {
+    setTodayData(prev => ({
+      ...prev,
+      tasks: prev.tasks.filter(ref => !(ref.columnId === columnId && ref.taskId === taskId))
+    }))
+  }
+
+  const restoreYesterday = () => {
+    setTodayData(prev => {
+      if (!prev.yesterday || prev.yesterday.tasks.length === 0) return prev
+      // Filter out stale refs (tasks that no longer exist or are completed/cleared)
+      const validRefs = prev.yesterday.tasks.filter(ref => {
+        const col = data.columns.find(c => c.id === ref.columnId)
+        if (!col) return false
+        const task = col.tasks.find(t => t.id === ref.taskId)
+        return task && !task.completed && !task.cleared
+      })
+      // Merge with existing, avoiding duplicates
+      const existingKeys = new Set(prev.tasks.map(r => `${r.columnId}:${r.taskId}`))
+      const newRefs = validRefs.filter(r => !existingKeys.has(`${r.columnId}:${r.taskId}`))
+      return { ...prev, tasks: [...prev.tasks, ...newRefs] }
+    })
+  }
+
   return (
-    <AppContext.Provider value={{ data, addColumn, deleteColumn, updateColumnColor, reorderColumns, addTask, addSubtask, toggleTask, deleteTask, updateTask, updateTaskPriority, togglePending, setDueDate, removeDueDate, toggleAutoSort, toggleColumnVisibility, clearCompleted }}>
+    <AppContext.Provider value={{ data, addColumn, deleteColumn, updateColumnColor, reorderColumns, addTask, addSubtask, toggleTask, deleteTask, updateTask, updateTaskPriority, togglePending, setDueDate, removeDueDate, toggleAutoSort, toggleColumnVisibility, clearCompleted, todayData, addToToday, removeFromToday, restoreYesterday }}>
       {children}
     </AppContext.Provider>
   )

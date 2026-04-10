@@ -1,0 +1,166 @@
+.today-panel {
+  width: 260px;
+  background-color: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.today-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+  background-color: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border);
+}
+
+.today-panel-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.today-panel-count {
+  background-color: var(--accent-blue);
+  color: var(--bg-primary);
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 0.125rem 0.375rem;
+  border-radius: 8px;
+  min-width: 1rem;
+  text-align: center;
+}
+
+.today-panel-content {
+  flex: 1;
+  padding: 0.5rem;
+  overflow-y: auto;
+}
+
+.today-panel-empty {
+  padding: 1rem 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.today-column-group {
+  margin-bottom: 0.75rem;
+}
+
+.today-column-header {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.today-column-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.today-column-name {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.today-task-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.15s;
+}
+
+.today-task-row:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.today-task-checkbox {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.today-task-text {
+  flex: 1;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.today-task-pending {
+  flex-shrink: 0;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  color: #282828;
+  background-color: #d79921;
+  padding: 0.0625rem 0.25rem;
+  border-radius: 2px;
+}
+
+.today-task-priority {
+  flex-shrink: 0;
+  font-size: 0.5625rem;
+  font-weight: 600;
+  color: #282828;
+  padding: 0.0625rem 0.25rem;
+  border-radius: 2px;
+}
+
+.today-task-remove {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.today-task-row:hover .today-task-remove {
+  opacity: 1;
+}
+
+.today-task-remove:hover {
+  color: #fb4934;
+}
+
+.today-restore-button {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  background-color: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+
+.today-restore-button:hover {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  background-color: rgba(69, 133, 136, 0.1);
+}

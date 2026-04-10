@@ -56,6 +56,21 @@ export const DUE_DATE_COLORS = {
   urgent: '#fb4934',  // Gruvbox red (day-of / overdue)
 }
 
+// Today panel types
+export interface TodayTaskRef {
+  columnId: string
+  taskId: string
+}
+
+export interface TodayData {
+  date: string              // YYYY-MM-DD
+  tasks: TodayTaskRef[]
+  yesterday: {
+    date: string
+    tasks: TodayTaskRef[]
+  } | null
+}
+
 // Auto-clear duration options
 export type AutoClearDuration = '1min' | '5min' | '1hr' | '4hr' | '24hr' | 'overnight' | '1week' | 'never'
 

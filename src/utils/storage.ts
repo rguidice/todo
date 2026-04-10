@@ -1,4 +1,4 @@
-import { AppData } from '../types'
+import { AppData, TodayData } from '../types'
 
 // Storage utilities for tasks.json and tasks.md
 // These will use Electron's file system APIs via the preload bridge
@@ -50,6 +50,40 @@ export const saveTasks = async (data: AppData): Promise<void> => {
   } catch (error) {
     console.error('Failed to save tasks:', error)
     throw error
+  }
+}
+
+export const getTodayDateString = (): string => {
+  return new Date().toISOString().slice(0, 10)
+}
+
+const createEmptyTodayData = (): TodayData => ({
+  date: getTodayDateString(),
+  tasks: [],
+  yesterday: null
+})
+
+export const loadTodayData = async (): Promise<TodayData> => {
+  try {
+    if (!window.electron) {
+      return createEmptyTodayData()
+    }
+    const data = await window.electron.loadFile('today.json')
+    if (data) {
+      return JSON.parse(data) as TodayData
+    }
+    return createEmptyTodayData()
+  } catch (error) {
+    console.error('Failed to load today data:', error)
+    return createEmptyTodayData()
+  }
+}
+
+export const saveTodayData = async (data: TodayData): Promise<void> => {
+  try {
+    await window.electron.saveFile('today.json', JSON.stringify(data, null, 2))
+  } catch (error) {
+    console.error('Failed to save today data:', error)
   }
 }
 

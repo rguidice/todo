@@ -25,9 +25,12 @@ interface ColumnProps {
   onDragOver?: (e: React.DragEvent) => void
   onDragEnd?: () => void
   isDragging?: boolean
+  onAddToToday?: (columnId: string, taskId: string) => void
+  onRemoveFromToday?: (columnId: string, taskId: string) => void
+  todayTaskIds?: Set<string>
 }
 
-const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDeleteTask, onUpdateTask, onAddSubtask, onUpdatePriority, onTogglePending, onSetDueDate, onRemoveDueDate, dueDateDisplayMode, onToggleAutoSort, onClearCompleted, onDeleteColumn, onUpdateColor, onHideColumn, onDragStart, onDragOver, onDragEnd, isDragging }) => {
+const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDeleteTask, onUpdateTask, onAddSubtask, onUpdatePriority, onTogglePending, onSetDueDate, onRemoveDueDate, dueDateDisplayMode, onToggleAutoSort, onClearCompleted, onDeleteColumn, onUpdateColor, onHideColumn, onDragStart, onDragOver, onDragEnd, isDragging, onAddToToday, onRemoveFromToday, todayTaskIds }) => {
   const [isAdding, setIsAdding] = useState(false)
   const [newTaskText, setNewTaskText] = useState('')
   const [newTaskPriority, setNewTaskPriority] = useState<Priority>(null)
@@ -238,6 +241,9 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
             onTogglePending={(taskId) => onTogglePending(column.id, taskId)}
             onSetDueDate={(taskId, dueDate) => onSetDueDate(column.id, taskId, dueDate)}
             onRemoveDueDate={(taskId) => onRemoveDueDate(column.id, taskId)}
+            onAddToToday={onAddToToday ? (taskId) => onAddToToday(column.id, taskId) : undefined}
+            onRemoveFromToday={onRemoveFromToday ? (taskId) => onRemoveFromToday(column.id, taskId) : undefined}
+            todayTaskIds={todayTaskIds}
           />
         ))}
 
@@ -260,6 +266,9 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
                 onTogglePending={(taskId) => onTogglePending(column.id, taskId)}
                 onSetDueDate={(taskId, dueDate) => onSetDueDate(column.id, taskId, dueDate)}
                 onRemoveDueDate={(taskId) => onRemoveDueDate(column.id, taskId)}
+                onAddToToday={onAddToToday ? (taskId) => onAddToToday(column.id, taskId) : undefined}
+                onRemoveFromToday={onRemoveFromToday ? (taskId) => onRemoveFromToday(column.id, taskId) : undefined}
+                todayTaskIds={todayTaskIds}
               />
             ))}
             <button

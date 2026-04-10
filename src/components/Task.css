@@ -276,6 +276,11 @@
   color: #98971a;
 }
 
+.context-menu-item.today:hover {
+  background-color: rgba(69, 133, 136, 0.1);
+  color: #458588;
+}
+
 .context-menu-item.p0:hover {
   background-color: rgba(214, 93, 14, 0.1);
   color: #d65d0e;

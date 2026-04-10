@@ -19,6 +19,9 @@ interface TaskProps {
   onTogglePending?: (taskId: string) => void
   onSetDueDate?: (taskId: string, dueDate: string) => void
   onRemoveDueDate?: (taskId: string) => void
+  onAddToToday?: (taskId: string) => void
+  onRemoveFromToday?: (taskId: string) => void
+  todayTaskIds?: Set<string>
 }
 
 const Task: React.FC<TaskProps> = ({
@@ -34,7 +37,10 @@ const Task: React.FC<TaskProps> = ({
   onUpdatePriority,
   onTogglePending,
   onSetDueDate,
-  onRemoveDueDate
+  onRemoveDueDate,
+  onAddToToday,
+  onRemoveFromToday,
+  todayTaskIds
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isAddingSubtask, setIsAddingSubtask] = useState(false)
@@ -293,6 +299,9 @@ const Task: React.FC<TaskProps> = ({
           onTogglePending={onTogglePending}
           onSetDueDate={onSetDueDate}
           onRemoveDueDate={onRemoveDueDate}
+          onAddToToday={onAddToToday}
+          onRemoveFromToday={onRemoveFromToday}
+          todayTaskIds={todayTaskIds}
         />
       ))}
 
@@ -329,6 +338,22 @@ const Task: React.FC<TaskProps> = ({
             }}>
               Delete Task
             </button>
+            <div className="context-menu-divider"></div>
+            {!task.completed && (todayTaskIds?.has(task.id) ? (
+              <button className="context-menu-item" onClick={() => {
+                if (onRemoveFromToday) onRemoveFromToday(task.id)
+                setShowContextMenu(false)
+              }}>
+                Remove from Today
+              </button>
+            ) : (
+              <button className="context-menu-item today" onClick={() => {
+                if (onAddToToday) onAddToToday(task.id)
+                setShowContextMenu(false)
+              }}>
+                Add to Today
+              </button>
+            ))}
             <div className="context-menu-divider"></div>
             <button className="context-menu-item pending" onClick={() => {
               if (onTogglePending) onTogglePending(task.id)

@@ -68,6 +68,47 @@ body {
   flex: 1;
 }
 
+.today-toggle-button {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  padding: 0.3rem 0.625rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  transition: all 0.2s;
+}
+
+.today-toggle-button:hover {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.today-toggle-button.active {
+  background-color: var(--accent-blue);
+  border-color: var(--accent-blue);
+  color: var(--bg-primary);
+}
+
+.today-toggle-count {
+  background-color: var(--accent-blue);
+  color: var(--bg-primary);
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 0.0625rem 0.3125rem;
+  border-radius: 8px;
+  min-width: 0.875rem;
+  text-align: center;
+}
+
+.today-toggle-button.active .today-toggle-count {
+  background-color: var(--bg-primary);
+  color: var(--accent-blue);
+}
+
 .report-button {
   background-color: var(--accent-blue);
   color: var(--text-primary);

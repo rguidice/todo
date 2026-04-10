@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useApp } from './context/AppContext'
 import Column from './components/Column'
 import Sidebar from './components/Sidebar'
+import TodayPanel from './components/TodayPanel'
 import ReportModal from './components/ReportModal'
 import SettingsModal from './components/SettingsModal'
 import { DueDateDisplayMode } from './types'
 import './App.css'
 
 function App() {
-  const { data, addColumn, deleteColumn, updateColumnColor, reorderColumns, addTask, addSubtask, toggleTask, deleteTask, updateTask, updateTaskPriority, togglePending, setDueDate, removeDueDate, toggleAutoSort, toggleColumnVisibility, clearCompleted } = useApp()
+  const { data, addColumn, deleteColumn, updateColumnColor, reorderColumns, addTask, addSubtask, toggleTask, deleteTask, updateTask, updateTaskPriority, togglePending, setDueDate, removeDueDate, toggleAutoSort, toggleColumnVisibility, clearCompleted, todayData, addToToday, removeFromToday } = useApp()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [todayPanelOpen, setTodayPanelOpen] = useState(false)
   const [draggedColumnIndex, setDraggedColumnIndex] = useState<number | null>(null)
   const [showReportModal, setShowReportModal] = useState(false)
   const [showSettingsModal, setShowSettingsModal] = useState(false)
@@ -30,6 +32,18 @@ function App() {
   }, [])
 
   const visibleColumns = data.columns.filter(col => col.visible)
+
+  // Build a map of columnId -> Set<taskId> for today panel references
+  const todayTaskIdsByColumn = useMemo(() => {
+    const map = new Map<string, Set<string>>()
+    for (const ref of todayData.tasks) {
+      if (!map.has(ref.columnId)) {
+        map.set(ref.columnId, new Set())
+      }
+      map.get(ref.columnId)!.add(ref.taskId)
+    }
+    return map
+  }, [todayData.tasks])
 
   const handleDragStart = (index: number) => {
     setDraggedColumnIndex(index)
@@ -66,6 +80,12 @@ function App() {
         <button className="menu-button" onClick={() => setSidebarOpen(!sidebarOpen)}>
           ☰
         </button>
+        <button className={`today-toggle-button ${todayPanelOpen ? 'active' : ''}`} onClick={() => setTodayPanelOpen(!todayPanelOpen)}>
+          Today
+          {todayData.tasks.length > 0 && (
+            <span className="today-toggle-count">{todayData.tasks.length}</span>
+          )}
+        </button>
         <h1>todo</h1>
         <button className="report-button" onClick={() => setShowReportModal(true)}>Generate Report</button>
       </div>
@@ -78,6 +98,8 @@ function App() {
           onToggleColumnVisibility={toggleColumnVisibility}
           onOpenSettings={() => setShowSettingsModal(true)}
         />
+
+        <TodayPanel isOpen={todayPanelOpen} />
 
         <div className="columns-container">
           {visibleColumns.length === 0 ? (
@@ -110,6 +132,9 @@ function App() {
                   onDragOver={(e) => handleDragOver(e, columnIndex)}
                   onDragEnd={handleDragEnd}
                   isDragging={draggedColumnIndex === columnIndex}
+                  onAddToToday={addToToday}
+                  onRemoveFromToday={removeFromToday}
+                  todayTaskIds={todayTaskIdsByColumn.get(column.id)}
                 />
               )
             })
