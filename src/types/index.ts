@@ -44,8 +44,8 @@ export const GRUVBOX_COLORS = {
 
 export const PRIORITY_COLORS = {
   P0: '#d65d0e', // Orange (high)
-  P1: '#458588', // Blue (medium)
-  P2: '#928374', // Gray (low)
+  P1: '#6d9da1', // Blue (medium)
+  P2: '#bdae93', // Gray (low)
 }
 
 export type DueDateDisplayMode = 'date' | 'days'
