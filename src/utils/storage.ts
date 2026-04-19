@@ -11,7 +11,6 @@ export const loadTasks = async (): Promise<AppData> => {
     }
     const data = await window.electron.loadFile('tasks.json')
     if (data) {
-      console.log('Loaded tasks from file:', data)
       const parsed = JSON.parse(data) as AppData
       // Add missing fields for backward compatibility
       parsed.columns = parsed.columns.map((col, index) => ({
@@ -28,7 +27,6 @@ export const loadTasks = async (): Promise<AppData> => {
       }))
       return parsed
     }
-    console.log('No tasks file found, starting with empty state')
     return { columns: [] }
   } catch (error) {
     console.error('Failed to load tasks:', error)
@@ -40,13 +38,11 @@ export const loadTasks = async (): Promise<AppData> => {
 export const saveTasks = async (data: AppData): Promise<void> => {
   try {
     const jsonData = JSON.stringify(data, null, 2)
-    console.log('Saving tasks to file:', jsonData)
     await window.electron.saveFile('tasks.json', jsonData)
 
     // Also generate and save markdown version
     const markdown = generateMarkdown(data)
     await window.electron.saveFile('tasks.md', markdown)
-    console.log('Tasks saved successfully')
   } catch (error) {
     console.error('Failed to save tasks:', error)
     throw error

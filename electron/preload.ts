@@ -1,7 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
-console.log('[Preload] Script is running!')
-
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electron', {
@@ -31,11 +29,6 @@ contextBridge.exposeInMainWorld('electron', {
 
   getDataDirectory: () =>
     ipcRenderer.invoke('get-data-directory'),
-
-  // Window controls
-  minimize: () => ipcRenderer.send('window-minimize'),
-  maximize: () => ipcRenderer.send('window-maximize'),
-  close: () => ipcRenderer.send('window-close'),
 })
 
 // TypeScript type definition for the exposed API
@@ -54,9 +47,6 @@ export interface ElectronAPI {
   updateSettings: (settings: AppSettings) => Promise<void>
   selectDirectory: () => Promise<string | null>
   getDataDirectory: () => Promise<string>
-  minimize: () => void
-  maximize: () => void
-  close: () => void
 }
 
 declare global {

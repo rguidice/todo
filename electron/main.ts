@@ -96,7 +96,6 @@ function isVisibleOnScreen(bounds: { x: number; y: number; width: number; height
 const createWindow = async () => {
   // Create the browser window with initial size from spec (800x400)
   const preloadPath = path.join(__dirname, 'preload.js')
-  console.log('Preload script path:', preloadPath)
 
   // Load saved window state
   const savedState = await loadWindowState()
@@ -133,7 +132,9 @@ const createWindow = async () => {
   // Load the app
   if (process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL)
-    mainWindow.webContents.openDevTools() // Open DevTools in development
+    if (!app.isPackaged) {
+      mainWindow.webContents.openDevTools()
+    }
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
   }
@@ -162,7 +163,6 @@ const createWindow = async () => {
       }
 
       await saveWindowState(state)
-      console.log('Window state saved:', state)
     }
   })
 
@@ -251,7 +251,6 @@ ipcMain.handle('update-settings', async (_event, settings: AppSettings) => {
   settings.dataDirectory = resolvedDir
   await saveSettings(settings)
   DATA_DIR = resolvedDir
-  console.log('Data directory updated to:', DATA_DIR)
 })
 
 ipcMain.handle('select-directory', async () => {
@@ -279,7 +278,6 @@ app.whenReady().then(async () => {
   // Load settings and set DATA_DIR before creating window
   const settings = await loadSettings()
   DATA_DIR = settings.dataDirectory
-  console.log('Data directory:', DATA_DIR)
 
   createWindow()
 
