@@ -20,7 +20,7 @@ interface ColumnProps {
   dueDateDisplayMode?: DueDateDisplayMode
   onToggleAutoSort: (columnId: string) => void
   onClearCompleted: (columnId: string) => void
-  onDeleteColumn?: (columnId: string) => void
+  onArchiveColumn?: (columnId: string) => void
   onRenameColumn?: (columnId: string, name: string) => void
   onUpdateColor?: (columnId: string, color: string) => void
   onHideColumn?: (columnId: string) => void
@@ -33,7 +33,7 @@ interface ColumnProps {
   todayTaskIds?: Set<string>
 }
 
-const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDeleteTask, onMoveTask, allColumns, onUpdateTask, onAddSubtask, onUpdatePriority, onTogglePending, onSetDueDate, onRemoveDueDate, dueDateDisplayMode, onToggleAutoSort, onClearCompleted, onDeleteColumn, onRenameColumn, onUpdateColor, onHideColumn, onDragStart, onDragOver, onDragEnd, isDragging, onAddToToday, onRemoveFromToday, todayTaskIds }) => {
+const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDeleteTask, onMoveTask, allColumns, onUpdateTask, onAddSubtask, onUpdatePriority, onTogglePending, onSetDueDate, onRemoveDueDate, dueDateDisplayMode, onToggleAutoSort, onClearCompleted, onArchiveColumn, onRenameColumn, onUpdateColor, onHideColumn, onDragStart, onDragOver, onDragEnd, isDragging, onAddToToday, onRemoveFromToday, todayTaskIds }) => {
   const [isAdding, setIsAdding] = useState(false)
   const [newTaskText, setNewTaskText] = useState('')
   const [newTaskPriority, setNewTaskPriority] = useState<Priority>(null)
@@ -41,8 +41,8 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
   const [contextMenuPos, setContextMenuPos] = useState({ x: 0, y: 0 })
   const [adjustedMenuPos, setAdjustedMenuPos] = useState({ x: 0, y: 0 })
   const [showColorPicker, setShowColorPicker] = useState(false)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isTaskDropTarget, setIsTaskDropTarget] = useState(false)
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false)
   const [isRenaming, setIsRenaming] = useState(false)
   const [renameText, setRenameText] = useState('')
   const renameInputRef = useRef<HTMLInputElement>(null)
@@ -164,24 +164,22 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
     setShowContextMenu(false)
   }
 
-  const handleDelete = () => {
-    const hasItems = column.tasks.length > 0
-    if (hasItems) {
-      setShowDeleteConfirm(true)
-      setShowContextMenu(false)
-    } else {
-      if (onDeleteColumn) {
-        onDeleteColumn(column.id)
-      }
-      setShowContextMenu(false)
+  const activeTaskCount = column.tasks.filter(t => !t.completed && !t.cleared).length
+
+  const handleArchive = () => {
+    setShowContextMenu(false)
+    if (activeTaskCount > 0) {
+      setShowArchiveConfirm(true)
+    } else if (onArchiveColumn) {
+      onArchiveColumn(column.id)
     }
   }
 
-  const confirmDelete = () => {
-    if (onDeleteColumn) {
-      onDeleteColumn(column.id)
+  const confirmArchive = () => {
+    if (onArchiveColumn) {
+      onArchiveColumn(column.id)
     }
-    setShowDeleteConfirm(false)
+    setShowArchiveConfirm(false)
   }
 
   const handleHide = () => {
@@ -302,7 +300,7 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
             onRemoveFromToday={onRemoveFromToday ? (taskId) => onRemoveFromToday(column.id, taskId) : undefined}
             todayTaskIds={todayTaskIds}
             onMoveTask={onMoveTask ? (taskId, toColumnId) => onMoveTask(column.id, toColumnId, taskId) : undefined}
-            moveTargetColumns={allColumns?.filter(c => c.id !== column.id && c.visible)}
+            moveTargetColumns={allColumns?.filter(c => c.id !== column.id && c.visible && !c.archived)}
             columnId={column.id}
           />
         ))}
@@ -408,8 +406,8 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
             <button className="context-menu-item" onClick={handleHide}>
               Hide Column
             </button>
-            <button className="context-menu-item danger" onClick={handleDelete}>
-              Delete Column
+            <button className="context-menu-item" onClick={handleArchive}>
+              Archive Column
             </button>
           </div>
         </>,
@@ -445,15 +443,15 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
         document.body
       )}
 
-      {/* Delete Confirmation */}
-      {showDeleteConfirm && createPortal(
+      {/* Archive Confirmation */}
+      {showArchiveConfirm && createPortal(
         <div className="dialog-overlay">
           <div className="dialog">
-            <h3>Delete Column?</h3>
-            <p>This column contains {column.tasks.length} task{column.tasks.length !== 1 ? 's' : ''}. Are you sure you want to delete it?</p>
+            <h3>Archive Column?</h3>
+            <p>This column has {activeTaskCount} active task{activeTaskCount !== 1 ? 's' : ''}. You can restore it later from the sidebar.</p>
             <div className="dialog-buttons">
-              <button onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
-              <button onClick={confirmDelete} className="danger">Delete</button>
+              <button onClick={() => setShowArchiveConfirm(false)}>Cancel</button>
+              <button onClick={confirmArchive} className="primary">Archive</button>
             </div>
           </div>
         </div>,

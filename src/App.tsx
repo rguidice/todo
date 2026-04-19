@@ -9,7 +9,7 @@ import { DueDateDisplayMode } from './types'
 import './App.css'
 
 function App() {
-  const { data, addColumn, deleteColumn, renameColumn, updateColumnColor, reorderColumns, addTask, addSubtask, toggleTask, deleteTask, moveTask, updateTask, updateTaskPriority, togglePending, setDueDate, removeDueDate, toggleAutoSort, toggleColumnVisibility, clearCompleted, todayData, addToToday, removeFromToday } = useApp()
+  const { data, addColumn, deleteColumn, archiveColumn, restoreColumn, renameColumn, updateColumnColor, reorderColumns, addTask, addSubtask, toggleTask, deleteTask, moveTask, updateTask, updateTaskPriority, togglePending, setDueDate, removeDueDate, toggleAutoSort, toggleColumnVisibility, clearCompleted, todayData, addToToday, removeFromToday } = useApp()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [todayPanelOpen, setTodayPanelOpen] = useState(false)
   const [draggedColumnIndex, setDraggedColumnIndex] = useState<number | null>(null)
@@ -31,7 +31,7 @@ function App() {
     loadDueDateDisplayMode()
   }, [])
 
-  const visibleColumns = data.columns.filter(col => col.visible)
+  const visibleColumns = data.columns.filter(col => col.visible && !col.archived)
 
   // Build a map of columnId -> Set<taskId> for today panel references
   const todayTaskIdsByColumn = useMemo(() => {
@@ -97,6 +97,9 @@ function App() {
           columns={data.columns}
           onAddColumn={addColumn}
           onToggleColumnVisibility={toggleColumnVisibility}
+          onArchiveColumn={archiveColumn}
+          onRestoreColumn={restoreColumn}
+          onDeleteColumn={deleteColumn}
           onOpenSettings={() => setShowSettingsModal(true)}
         />
 
@@ -128,7 +131,7 @@ function App() {
                   dueDateDisplayMode={dueDateDisplayMode}
                   onToggleAutoSort={toggleAutoSort}
                   onClearCompleted={clearCompleted}
-                  onDeleteColumn={deleteColumn}
+                  onArchiveColumn={archiveColumn}
                   onRenameColumn={renameColumn}
                   onUpdateColor={updateColumnColor}
                   onHideColumn={toggleColumnVisibility}

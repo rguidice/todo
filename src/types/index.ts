@@ -21,6 +21,7 @@ export interface Column {
   name: string
   backgroundColor: string
   visible: boolean
+  archived: boolean
   order: number
   autoSort: boolean
   tasks: Task[]

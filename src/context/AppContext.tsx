@@ -6,6 +6,8 @@ interface AppContextType {
   data: AppData
   addColumn: (name: string, backgroundColor: string) => void
   deleteColumn: (columnId: string) => void
+  archiveColumn: (columnId: string) => void
+  restoreColumn: (columnId: string) => void
   renameColumn: (columnId: string, name: string) => void
   updateColumnColor: (columnId: string, backgroundColor: string) => void
   reorderColumns: (fromIndex: number, toIndex: number) => void
@@ -207,6 +209,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       name,
       backgroundColor,
       visible: true,
+      archived: false,
       order: data.columns.length,
       autoSort: false,
       tasks: []
@@ -587,6 +590,32 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }))
   }
 
+  const archiveColumn = (columnId: string) => {
+    setTodayData(prev => ({
+      ...prev,
+      tasks: prev.tasks.filter(ref => ref.columnId !== columnId)
+    }))
+    setData(prev => ({
+      ...prev,
+      columns: prev.columns.map(col =>
+        col.id === columnId
+          ? { ...col, archived: true, visible: false }
+          : col
+      )
+    }))
+  }
+
+  const restoreColumn = (columnId: string) => {
+    setData(prev => ({
+      ...prev,
+      columns: prev.columns.map(col =>
+        col.id === columnId
+          ? { ...col, archived: false, visible: true }
+          : col
+      )
+    }))
+  }
+
   const renameColumn = (columnId: string, name: string) => {
     setData(prev => ({
       ...prev,
@@ -670,7 +699,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }
 
   return (
-    <AppContext.Provider value={{ data, addColumn, deleteColumn, renameColumn, updateColumnColor, reorderColumns, addTask, addSubtask, toggleTask, deleteTask, moveTask, updateTask, updateTaskPriority, togglePending, setDueDate, removeDueDate, toggleAutoSort, toggleColumnVisibility, clearCompleted, todayData, addToToday, removeFromToday, restoreYesterday }}>
+    <AppContext.Provider value={{ data, addColumn, deleteColumn, archiveColumn, restoreColumn, renameColumn, updateColumnColor, reorderColumns, addTask, addSubtask, toggleTask, deleteTask, moveTask, updateTask, updateTaskPriority, togglePending, setDueDate, removeDueDate, toggleAutoSort, toggleColumnVisibility, clearCompleted, todayData, addToToday, removeFromToday, restoreYesterday }}>
       {children}
     </AppContext.Provider>
   )
