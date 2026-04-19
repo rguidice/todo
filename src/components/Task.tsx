@@ -1,6 +1,6 @@
 import React, { useState, useRef, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { Task as TaskType, PRIORITY_COLORS, Priority, DueDateDisplayMode } from '../types'
+import { Task as TaskType, Column as ColumnType, PRIORITY_COLORS, Priority, DueDateDisplayMode } from '../types'
 import { getWorkingDaysRemaining, getDueDateColor, formatShortDate, formatWorkingDays } from '../utils/workingDays'
 import DueDatePickerModal from './DueDatePickerModal'
 import './Task.css'
@@ -22,6 +22,9 @@ interface TaskProps {
   onAddToToday?: (taskId: string) => void
   onRemoveFromToday?: (taskId: string) => void
   todayTaskIds?: Set<string>
+  onMoveTask?: (taskId: string, toColumnId: string) => void
+  moveTargetColumns?: ColumnType[]
+  columnId?: string
 }
 
 const Task: React.FC<TaskProps> = ({
@@ -40,7 +43,10 @@ const Task: React.FC<TaskProps> = ({
   onRemoveDueDate,
   onAddToToday,
   onRemoveFromToday,
-  todayTaskIds
+  todayTaskIds,
+  onMoveTask,
+  moveTargetColumns,
+  columnId
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isAddingSubtask, setIsAddingSubtask] = useState(false)
@@ -52,7 +58,11 @@ const Task: React.FC<TaskProps> = ({
   const [isEditing, setIsEditing] = useState(false)
   const [editText, setEditText] = useState(task.text)
   const [showDueDatePicker, setShowDueDatePicker] = useState(false)
+  const [showMoveSubmenu, setShowMoveSubmenu] = useState(false)
+  const [submenuDirection, setSubmenuDirection] = useState<'right' | 'left'>('right')
+  const [isDragging, setIsDragging] = useState(false)
   const contextMenuRef = useRef<HTMLDivElement>(null)
+  const moveItemRef = useRef<HTMLButtonElement>(null)
 
   let children = allTasks.filter(t => t.parentId === task.id && !t.cleared)
 
@@ -157,12 +167,20 @@ const Task: React.FC<TaskProps> = ({
   return (
     <div className="task-container">
       <div
-        className={`task ${task.completed ? 'completed' : ''} ${task.priority ? 'has-priority' : ''}`}
+        className={`task ${task.completed ? 'completed' : ''} ${task.priority ? 'has-priority' : ''} ${isDragging ? 'dragging' : ''}`}
         style={{
           marginLeft: `${depth * 1.5}rem`,
           borderLeftColor: priorityColor
         }}
         onContextMenu={handleContextMenu}
+        draggable={depth === 0 && !task.completed && !!onMoveTask}
+        onDragStart={(e) => {
+          if (depth !== 0 || !columnId) return
+          e.dataTransfer.setData('application/x-task', JSON.stringify({ columnId, taskId: task.id }))
+          e.dataTransfer.effectAllowed = 'move'
+          setIsDragging(true)
+        }}
+        onDragEnd={() => setIsDragging(false)}
       >
         {children.length > 0 ? (
           <button
@@ -302,6 +320,9 @@ const Task: React.FC<TaskProps> = ({
           onAddToToday={onAddToToday}
           onRemoveFromToday={onRemoveFromToday}
           todayTaskIds={todayTaskIds}
+          onMoveTask={onMoveTask}
+          moveTargetColumns={moveTargetColumns}
+          columnId={columnId}
         />
       ))}
 
@@ -338,6 +359,46 @@ const Task: React.FC<TaskProps> = ({
             }}>
               Delete Task
             </button>
+            {onMoveTask && moveTargetColumns && moveTargetColumns.length > 0 && (
+              <>
+                <div className="context-menu-divider"></div>
+                <div
+                  className="context-menu-submenu-wrapper"
+                  onMouseLeave={() => setShowMoveSubmenu(false)}
+                >
+                  <button
+                    ref={moveItemRef}
+                    className="context-menu-item has-submenu"
+                    onMouseEnter={() => {
+                      setShowMoveSubmenu(true)
+                      if (moveItemRef.current) {
+                        const rect = moveItemRef.current.getBoundingClientRect()
+                        setSubmenuDirection(rect.right + 160 > window.innerWidth ? 'left' : 'right')
+                      }
+                    }}
+                  >
+                    Move to...
+                  </button>
+                  {showMoveSubmenu && (
+                    <div className={`context-menu-submenu ${submenuDirection}`}>
+                      {moveTargetColumns.map(col => (
+                        <button
+                          key={col.id}
+                          className="context-menu-item"
+                          onClick={() => {
+                            onMoveTask(task.id, col.id)
+                            setShowContextMenu(false)
+                          }}
+                        >
+                          <span className="context-menu-color-dot" style={{ backgroundColor: col.backgroundColor }} />
+                          {col.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
             <div className="context-menu-divider"></div>
             {!task.completed && (todayTaskIds?.has(task.id) ? (
               <button className="context-menu-item" onClick={() => {

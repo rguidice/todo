@@ -9,6 +9,8 @@ interface ColumnProps {
   onAddTask: (columnId: string, text: string, priority?: Priority) => void
   onToggleTask: (columnId: string, taskId: string) => void
   onDeleteTask: (columnId: string, taskId: string) => void
+  onMoveTask?: (fromColumnId: string, toColumnId: string, taskId: string) => void
+  allColumns?: ColumnType[]
   onUpdateTask: (columnId: string, taskId: string, text: string) => void
   onAddSubtask: (columnId: string, parentId: string, text: string, priority?: Priority) => void
   onUpdatePriority: (columnId: string, taskId: string, priority: Priority) => void
@@ -19,6 +21,7 @@ interface ColumnProps {
   onToggleAutoSort: (columnId: string) => void
   onClearCompleted: (columnId: string) => void
   onDeleteColumn?: (columnId: string) => void
+  onRenameColumn?: (columnId: string, name: string) => void
   onUpdateColor?: (columnId: string, color: string) => void
   onHideColumn?: (columnId: string) => void
   onDragStart?: () => void
@@ -30,7 +33,7 @@ interface ColumnProps {
   todayTaskIds?: Set<string>
 }
 
-const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDeleteTask, onUpdateTask, onAddSubtask, onUpdatePriority, onTogglePending, onSetDueDate, onRemoveDueDate, dueDateDisplayMode, onToggleAutoSort, onClearCompleted, onDeleteColumn, onUpdateColor, onHideColumn, onDragStart, onDragOver, onDragEnd, isDragging, onAddToToday, onRemoveFromToday, todayTaskIds }) => {
+const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDeleteTask, onMoveTask, allColumns, onUpdateTask, onAddSubtask, onUpdatePriority, onTogglePending, onSetDueDate, onRemoveDueDate, dueDateDisplayMode, onToggleAutoSort, onClearCompleted, onDeleteColumn, onRenameColumn, onUpdateColor, onHideColumn, onDragStart, onDragOver, onDragEnd, isDragging, onAddToToday, onRemoveFromToday, todayTaskIds }) => {
   const [isAdding, setIsAdding] = useState(false)
   const [newTaskText, setNewTaskText] = useState('')
   const [newTaskPriority, setNewTaskPriority] = useState<Priority>(null)
@@ -39,6 +42,10 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
   const [adjustedMenuPos, setAdjustedMenuPos] = useState({ x: 0, y: 0 })
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isTaskDropTarget, setIsTaskDropTarget] = useState(false)
+  const [isRenaming, setIsRenaming] = useState(false)
+  const [renameText, setRenameText] = useState('')
+  const renameInputRef = useRef<HTMLInputElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
   const contextMenuRef = useRef<HTMLDivElement>(null)
   const colorPickerRef = useRef<HTMLDivElement>(null)
@@ -184,17 +191,67 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
     setShowContextMenu(false)
   }
 
+  const handleRename = () => {
+    setShowContextMenu(false)
+    setRenameText(column.name)
+    setIsRenaming(true)
+  }
+
+  const submitRename = () => {
+    if (renameText.trim() && renameText.trim() !== column.name && onRenameColumn) {
+      onRenameColumn(column.id, renameText.trim())
+    }
+    setIsRenaming(false)
+  }
+
+  const handleColumnDragOver = (e: React.DragEvent) => {
+    if (e.dataTransfer.types.includes('application/x-task')) {
+      e.preventDefault()
+      setIsTaskDropTarget(true)
+    }
+    if (onDragOver) onDragOver(e)
+  }
+
+  const handleTaskDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsTaskDropTarget(false)
+    const taskData = e.dataTransfer.getData('application/x-task')
+    if (taskData && onMoveTask) {
+      const { columnId: fromColumnId, taskId } = JSON.parse(taskData)
+      if (fromColumnId !== column.id) {
+        onMoveTask(fromColumnId, column.id, taskId)
+      }
+    }
+  }
+
   return (
     <div
-      className={`column ${isDragging ? 'dragging' : ''}`}
+      className={`column ${isDragging ? 'dragging' : ''} ${isTaskDropTarget ? 'drop-target' : ''}`}
       style={{ backgroundColor: column.backgroundColor }}
-      onDragOver={onDragOver}
+      onDragOver={handleColumnDragOver}
+      onDragLeave={() => setIsTaskDropTarget(false)}
+      onDrop={handleTaskDrop}
     >
       <div
         className="column-header-container"
         onContextMenu={handleHeaderContextMenu}
       >
-        <h2 className="column-header">{column.name}</h2>
+        {isRenaming ? (
+          <input
+            ref={renameInputRef}
+            className="column-rename-input"
+            value={renameText}
+            onChange={(e) => setRenameText(e.target.value)}
+            onBlur={submitRename}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') submitRename()
+              if (e.key === 'Escape') setIsRenaming(false)
+            }}
+            autoFocus
+          />
+        ) : (
+          <h2 className="column-header">{column.name}</h2>
+        )}
         <div className="column-header-buttons">
           {hasAnyCompleted && (
             <button
@@ -244,6 +301,9 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
             onAddToToday={onAddToToday ? (taskId) => onAddToToday(column.id, taskId) : undefined}
             onRemoveFromToday={onRemoveFromToday ? (taskId) => onRemoveFromToday(column.id, taskId) : undefined}
             todayTaskIds={todayTaskIds}
+            onMoveTask={onMoveTask ? (taskId, toColumnId) => onMoveTask(column.id, toColumnId, taskId) : undefined}
+            moveTargetColumns={allColumns?.filter(c => c.id !== column.id && c.visible)}
+            columnId={column.id}
           />
         ))}
 
@@ -339,6 +399,9 @@ const Column: React.FC<ColumnProps> = ({ column, onAddTask, onToggleTask, onDele
             className="column-context-menu"
             style={{ top: adjustedMenuPos.y, left: adjustedMenuPos.x }}
           >
+            <button className="context-menu-item" onClick={handleRename}>
+              Rename Column
+            </button>
             <button className="context-menu-item" onClick={() => setShowColorPicker(true)}>
               Change Color
             </button>

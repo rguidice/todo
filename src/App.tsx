@@ -9,7 +9,7 @@ import { DueDateDisplayMode } from './types'
 import './App.css'
 
 function App() {
-  const { data, addColumn, deleteColumn, updateColumnColor, reorderColumns, addTask, addSubtask, toggleTask, deleteTask, updateTask, updateTaskPriority, togglePending, setDueDate, removeDueDate, toggleAutoSort, toggleColumnVisibility, clearCompleted, todayData, addToToday, removeFromToday } = useApp()
+  const { data, addColumn, deleteColumn, renameColumn, updateColumnColor, reorderColumns, addTask, addSubtask, toggleTask, deleteTask, moveTask, updateTask, updateTaskPriority, togglePending, setDueDate, removeDueDate, toggleAutoSort, toggleColumnVisibility, clearCompleted, todayData, addToToday, removeFromToday } = useApp()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [todayPanelOpen, setTodayPanelOpen] = useState(false)
   const [draggedColumnIndex, setDraggedColumnIndex] = useState<number | null>(null)
@@ -51,6 +51,7 @@ function App() {
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault()
+    if (e.dataTransfer.types.includes('application/x-task')) return
     if (draggedColumnIndex === null || draggedColumnIndex === index) return
 
     reorderColumns(draggedColumnIndex, index)
@@ -117,6 +118,8 @@ function App() {
                   onAddSubtask={addSubtask}
                   onToggleTask={toggleTask}
                   onDeleteTask={deleteTask}
+                  onMoveTask={moveTask}
+                  allColumns={data.columns}
                   onUpdateTask={updateTask}
                   onUpdatePriority={updateTaskPriority}
                   onTogglePending={togglePending}
@@ -126,6 +129,7 @@ function App() {
                   onToggleAutoSort={toggleAutoSort}
                   onClearCompleted={clearCompleted}
                   onDeleteColumn={deleteColumn}
+                  onRenameColumn={renameColumn}
                   onUpdateColor={updateColumnColor}
                   onHideColumn={toggleColumnVisibility}
                   onDragStart={() => handleDragStart(columnIndex)}

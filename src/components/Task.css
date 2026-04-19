@@ -10,6 +10,19 @@
   border-left: 3px solid transparent;
 }
 
+.task[draggable="true"] {
+  cursor: grab;
+}
+
+.task[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.task.dragging {
+  opacity: 0.4;
+  transform: scale(0.98);
+}
+
 .task.has-priority {
   border-left-width: 3px;
 }
@@ -241,6 +254,15 @@
   margin-bottom: 0.25rem;
 }
 
+.context-menu-color-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  margin-right: 0.375rem;
+  vertical-align: middle;
+}
+
 .context-menu-item {
   width: 100%;
   padding: 0.5rem;
@@ -294,4 +316,43 @@
 .context-menu-item.p2:hover {
   background-color: rgba(146, 131, 116, 0.1);
   color: #928374;
+}
+
+.context-menu-submenu-wrapper {
+  position: relative;
+}
+
+.context-menu-item.has-submenu {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.context-menu-item.has-submenu::after {
+  content: '▶';
+  font-size: 0.5rem;
+  color: var(--text-secondary);
+  margin-left: 0.5rem;
+}
+
+.context-menu-submenu {
+  position: absolute;
+  top: -0.25rem;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.25rem;
+  min-width: 150px;
+  z-index: 100002;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.context-menu-submenu.right {
+  left: 100%;
+  margin-left: 2px;
+}
+
+.context-menu-submenu.left {
+  right: 100%;
+  margin-right: 2px;
 }

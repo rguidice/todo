@@ -6,12 +6,14 @@ interface AppContextType {
   data: AppData
   addColumn: (name: string, backgroundColor: string) => void
   deleteColumn: (columnId: string) => void
+  renameColumn: (columnId: string, name: string) => void
   updateColumnColor: (columnId: string, backgroundColor: string) => void
   reorderColumns: (fromIndex: number, toIndex: number) => void
   addTask: (columnId: string, text: string, priority?: Priority) => void
   addSubtask: (columnId: string, parentId: string, text: string, priority?: Priority) => void
   toggleTask: (columnId: string, taskId: string) => void
   deleteTask: (columnId: string, taskId: string) => void
+  moveTask: (fromColumnId: string, toColumnId: string, taskId: string) => void
   updateTask: (columnId: string, taskId: string, text: string) => void
   updateTaskPriority: (columnId: string, taskId: string, priority: Priority) => void
   togglePending: (columnId: string, taskId: string) => void
@@ -366,6 +368,65 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }))
   }
 
+  const moveTask = (fromColumnId: string, toColumnId: string, taskId: string) => {
+    setData(prev => {
+      const fromCol = prev.columns.find(c => c.id === fromColumnId)
+      if (!fromCol) return prev
+
+      const task = fromCol.tasks.find(t => t.id === taskId)
+      if (!task) return prev
+
+      // Collect task and all descendants
+      const getDescendants = (t: Task): Task[] => {
+        return t.children.flatMap(childId => {
+          const child = fromCol.tasks.find(c => c.id === childId)
+          return child ? [child, ...getDescendants(child)] : []
+        })
+      }
+      const tasksToMove = [task, ...getDescendants(task)]
+      const idsToMove = new Set(tasksToMove.map(t => t.id))
+
+      // Update today panel references
+      setTodayData(todayPrev => ({
+        ...todayPrev,
+        tasks: todayPrev.tasks.map(ref =>
+          idsToMove.has(ref.taskId) && ref.columnId === fromColumnId
+            ? { ...ref, columnId: toColumnId }
+            : ref
+        )
+      }))
+
+      return {
+        ...prev,
+        columns: prev.columns.map(col => {
+          if (col.id === fromColumnId) {
+            // Remove moved tasks, and remove from parent's children
+            return {
+              ...col,
+              tasks: col.tasks
+                .filter(t => !idsToMove.has(t.id))
+                .map(t =>
+                  t.children.includes(taskId)
+                    ? { ...t, children: t.children.filter(id => id !== taskId) }
+                    : t
+                )
+            }
+          }
+          if (col.id === toColumnId) {
+            // Add tasks with parentId cleared for the top-level task
+            return {
+              ...col,
+              tasks: [...col.tasks, ...tasksToMove.map(t =>
+                t.id === taskId ? { ...t, parentId: null } : t
+              )]
+            }
+          }
+          return col
+        })
+      }
+    })
+  }
+
   const clearCompleted = (columnId: string) => {
     setData(prev => ({
       ...prev,
@@ -526,6 +587,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }))
   }
 
+  const renameColumn = (columnId: string, name: string) => {
+    setData(prev => ({
+      ...prev,
+      columns: prev.columns.map(col =>
+        col.id === columnId
+          ? { ...col, name }
+          : col
+      )
+    }))
+  }
+
   const updateColumnColor = (columnId: string, backgroundColor: string) => {
     setData(prev => ({
       ...prev,
@@ -598,7 +670,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }
 
   return (
-    <AppContext.Provider value={{ data, addColumn, deleteColumn, updateColumnColor, reorderColumns, addTask, addSubtask, toggleTask, deleteTask, updateTask, updateTaskPriority, togglePending, setDueDate, removeDueDate, toggleAutoSort, toggleColumnVisibility, clearCompleted, todayData, addToToday, removeFromToday, restoreYesterday }}>
+    <AppContext.Provider value={{ data, addColumn, deleteColumn, renameColumn, updateColumnColor, reorderColumns, addTask, addSubtask, toggleTask, deleteTask, moveTask, updateTask, updateTaskPriority, togglePending, setDueDate, removeDueDate, toggleAutoSort, toggleColumnVisibility, clearCompleted, todayData, addToToday, removeFromToday, restoreYesterday }}>
       {children}
     </AppContext.Provider>
   )

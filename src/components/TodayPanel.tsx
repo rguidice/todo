@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { useApp } from '../context/AppContext'
 import { PRIORITY_COLORS } from '../types'
 import './TodayPanel.css'
@@ -7,8 +7,40 @@ interface TodayPanelProps {
   isOpen: boolean
 }
 
+const MIN_WIDTH = 180
+const MAX_WIDTH = 500
+const DEFAULT_WIDTH = 260
+
 const TodayPanel: React.FC<TodayPanelProps> = ({ isOpen }) => {
   const { data, todayData, removeFromToday, restoreYesterday, toggleTask } = useApp()
+  const [width, setWidth] = useState(DEFAULT_WIDTH)
+  const isResizing = useRef(false)
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    isResizing.current = true
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isResizing.current) return
+      const panel = document.querySelector('.today-panel') as HTMLElement
+      if (!panel) return
+      const newWidth = e.clientX - panel.getBoundingClientRect().left
+      setWidth(Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, newWidth)))
+    }
+
+    const onMouseUp = () => {
+      isResizing.current = false
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+  }, [])
 
   // Auto-clean stale refs (task/column no longer exists)
   useEffect(() => {
@@ -26,6 +58,8 @@ const TodayPanel: React.FC<TodayPanelProps> = ({ isOpen }) => {
   }, [data])
 
   if (!isOpen) return null
+
+  const panelStyle = { width: `${width}px` }
 
   // Group tasks by column
   const groupedByColumn: Map<string, { columnName: string; columnColor: string; items: { columnId: string; taskId: string; text: string; priority: string | null; pending: boolean; completed: boolean }[] }> = new Map()
@@ -56,7 +90,7 @@ const TodayPanel: React.FC<TodayPanelProps> = ({ isOpen }) => {
   const hasYesterday = todayData.yesterday && todayData.yesterday.tasks.length > 0
 
   return (
-    <div className="today-panel">
+    <div className="today-panel" style={panelStyle}>
       <div className="today-panel-header">
         <span className="today-panel-title">Today</span>
         {todayData.tasks.length > 0 && (
@@ -121,6 +155,7 @@ const TodayPanel: React.FC<TodayPanelProps> = ({ isOpen }) => {
           </button>
         )}
       </div>
+      <div className="today-panel-resize-handle" onMouseDown={handleMouseDown} />
     </div>
   )
 }
