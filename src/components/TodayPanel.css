@@ -70,6 +70,23 @@
   margin-bottom: 0.75rem;
 }
 
+.today-parent-group {
+  margin-bottom: 0.25rem;
+}
+
+.today-parent-header {
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  padding: 0.2rem 0.5rem 0.1rem 1.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.today-parent-group .today-task-row {
+  padding-left: 1.25rem;
+}
+
 .today-column-header {
   display: flex;
   align-items: center;

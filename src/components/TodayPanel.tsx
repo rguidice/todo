@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { useApp } from '../context/AppContext'
-import { PRIORITY_COLORS } from '../types'
+import { Task, PRIORITY_COLORS } from '../types'
 import './TodayPanel.css'
 
 interface TodayPanelProps {
@@ -61,8 +61,16 @@ const TodayPanel: React.FC<TodayPanelProps> = ({ isOpen }) => {
 
   const panelStyle = { width: `${width}px` }
 
+  // Resolve immediate parent name for a task
+  const getParentName = (task: Task, allTasks: Task[]): string => {
+    if (!task.parentId) return ''
+    const parent = allTasks.find(t => t.id === task.parentId)
+    return parent ? parent.text : ''
+  }
+
   // Group tasks by column
-  const groupedByColumn: Map<string, { columnName: string; columnColor: string; items: { columnId: string; taskId: string; text: string; priority: string | null; pending: boolean; completed: boolean }[] }> = new Map()
+  type TodayItem = { columnId: string; taskId: string; text: string; priority: string | null; pending: boolean; completed: boolean; parentName: string }
+  const groupedByColumn: Map<string, { columnName: string; columnColor: string; items: TodayItem[] }> = new Map()
 
   for (const ref of todayData.tasks) {
     const col = data.columns.find(c => c.id === ref.columnId)
@@ -83,7 +91,8 @@ const TodayPanel: React.FC<TodayPanelProps> = ({ isOpen }) => {
       text: task.text,
       priority: task.priority,
       pending: task.pending,
-      completed: task.completed
+      completed: task.completed,
+      parentName: getParentName(task, col.tasks)
     })
   }
 
@@ -111,43 +120,65 @@ const TodayPanel: React.FC<TodayPanelProps> = ({ isOpen }) => {
           </div>
         )}
 
-        {Array.from(groupedByColumn.entries()).map(([columnId, group]) => (
-          <div key={columnId} className="today-column-group">
-            <div className="today-column-header">
-              <span className="today-column-dot" style={{ backgroundColor: group.columnColor }} />
-              <span className="today-column-name">{group.columnName}</span>
-            </div>
-            {group.items.map(item => {
-              const priorityColor = item.priority ? PRIORITY_COLORS[item.priority as keyof typeof PRIORITY_COLORS] : undefined
-              return (
-                <div key={item.taskId} className="today-task-row">
-                  <input
-                    type="checkbox"
-                    className="today-task-checkbox"
-                    checked={false}
-                    onChange={() => toggleTask(item.columnId, item.taskId)}
-                  />
-                  <span className="today-task-text">{item.text}</span>
-                  {item.pending && (
-                    <span className="today-task-pending">P</span>
-                  )}
-                  {item.priority && (
-                    <span className="today-task-priority" style={{ backgroundColor: priorityColor }}>
-                      {item.priority}
-                    </span>
-                  )}
-                  <button
-                    className="today-task-remove"
-                    onClick={() => removeFromToday(item.columnId, item.taskId)}
-                    title="Remove from Today"
-                  >
-                    &times;
-                  </button>
+        {Array.from(groupedByColumn.entries()).map(([columnId, group]) => {
+          // Sub-group items by parent chain
+          const topLevel: TodayItem[] = []
+          const byParent = new Map<string, TodayItem[]>()
+          for (const item of group.items) {
+            if (!item.parentName) {
+              topLevel.push(item)
+            } else {
+              if (!byParent.has(item.parentName)) byParent.set(item.parentName, [])
+              byParent.get(item.parentName)!.push(item)
+            }
+          }
+
+          const renderTaskRow = (item: TodayItem) => {
+            const priorityColor = item.priority ? PRIORITY_COLORS[item.priority as keyof typeof PRIORITY_COLORS] : undefined
+            return (
+              <div key={item.taskId} className="today-task-row">
+                <input
+                  type="checkbox"
+                  className="today-task-checkbox"
+                  checked={false}
+                  onChange={() => toggleTask(item.columnId, item.taskId)}
+                />
+                <span className="today-task-text">{item.text}</span>
+                {item.pending && (
+                  <span className="today-task-pending">P</span>
+                )}
+                {item.priority && (
+                  <span className="today-task-priority" style={{ backgroundColor: priorityColor }}>
+                    {item.priority}
+                  </span>
+                )}
+                <button
+                  className="today-task-remove"
+                  onClick={() => removeFromToday(item.columnId, item.taskId)}
+                  title="Remove from Today"
+                >
+                  &times;
+                </button>
+              </div>
+            )
+          }
+
+          return (
+            <div key={columnId} className="today-column-group">
+              <div className="today-column-header">
+                <span className="today-column-dot" style={{ backgroundColor: group.columnColor }} />
+                <span className="today-column-name">{group.columnName}</span>
+              </div>
+              {topLevel.map(renderTaskRow)}
+              {Array.from(byParent.entries()).map(([parentName, items]) => (
+                <div key={parentName} className="today-parent-group">
+                  <div className="today-parent-header" title={parentName}>{parentName}</div>
+                  {items.map(renderTaskRow)}
                 </div>
-              )
-            })}
-          </div>
-        ))}
+              ))}
+            </div>
+          )
+        })}
 
         {hasYesterday && (
           <button className="today-restore-button" onClick={restoreYesterday}>
