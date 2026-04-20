@@ -222,17 +222,8 @@ This document outlines features and enhancements that were discussed but deferre
 
 ---
 
-### 11. Drag-and-Drop Between Columns
-**Description**: Move tasks between columns via drag-and-drop
-**Features**:
-- Drag task to different column to move it
-- Preserves priority and completion status
-- Undo operation
-- Visual feedback during drag
-
-**Priority**: Medium - Natural interaction for reorganizing
-
-**Note**: Currently columns are separate categories, so this may or may not make sense depending on usage
+### 11. ~~Drag-and-Drop Between Columns~~ ✅ IMPLEMENTED
+**Status**: Implemented. Top-level uncompleted tasks can be dragged between columns. Also available via right-click "Move to..." hover submenu. Visual feedback with drop target highlight on columns and opacity change on dragged task. Column reorder drag (via handle) coexists without conflict.
 
 ---
 
@@ -261,16 +252,8 @@ This document outlines features and enhancements that were discussed but deferre
 
 ---
 
-### 14. Archive System
-**Description**: Archive old columns/tasks without deleting
-**Features**:
-- Archive completed tasks to separate file
-- Archive entire columns
-- View archived items (read-only)
-- Restore from archive
-- Search across archives
-
-**Priority**: Low - Current model is simple and works
+### 14. ~~Archive System~~ ✅ IMPLEMENTED (Columns)
+**Status**: Column archiving implemented. Columns can be archived from the right-click context menu or sidebar. Archived columns are hidden from the board but preserved for reports. Accessible from an "Archived" dropdown in the sidebar with restore and permanent delete options. Permanent delete warns about full task count (active, completed, report history) and data loss.
 
 ---
 
@@ -345,11 +328,13 @@ This document outlines features and enhancements that were discussed but deferre
 **Options to Add**:
 - Duplicate task
 - Convert to subtask / Promote to parent
-- Move to different column
+- ~~Move to different column~~ ✅ Implemented — hover submenu "Move to..." with fly-out column list
 - Copy task text
 - Add note
 - ~~Set due date~~ ✅ Implemented (v1.0.2) — Set/Change/Remove Due Date with calendar picker
 - Archive task
+
+**Column context menu now includes**: Rename Column, Change Color, Hide Column, Archive Column
 
 **Priority**: Medium - Depends on which features are implemented
 
@@ -367,11 +352,11 @@ This document outlines features and enhancements that were discussed but deferre
 2. Copy to clipboard for reports
 3. Task estimates & time tracking
 4. Tags/labels system
-5. Drag-and-drop between columns
+5. ~~Drag-and-drop between columns~~ ✅ Implemented
 6. Task notes/details
 7. Backup & restore system
 8. CLI tool
-9. Context menu enhancements (remaining: duplicate, move, copy text, etc.)
+9. Context menu enhancements (remaining: duplicate, copy text, etc.)
 
 ### Low Priority
 1. ~~Auto-clear completed tasks~~ ✅ Implemented (v1.0.1)
@@ -380,7 +365,7 @@ This document outlines features and enhancements that were discussed but deferre
 4. Recurring tasks
 5. Pomodoro timer
 6. Customizable themes
-7. Archive system
+7. ~~Archive system~~ ✅ Implemented (columns)
 8. Statistics dashboard
 
 ### Already Implemented
@@ -391,7 +376,10 @@ This document outlines features and enhancements that were discussed but deferre
 5. ✅ Manual clear completed button (v1.0.2)
 6. ✅ Custom date range reports (v1.0.1)
 7. ✅ Configurable data directory (v1.0.1)
-8. ✅ Today panel — collapsible focus panel with daily reset and restore yesterday (v1.0.4)
+8. ✅ Today panel — resizable focus panel with parent context, daily reset and restore yesterday (v1.0.4)
+9. ✅ Drag-and-drop tasks between columns + "Move to..." hover submenu
+10. ✅ Column archive system with restore and permanent delete
+11. ✅ Column rename (inline editing via right-click context menu)
 
 ### Very Low / Out of Scope
 1. Multi-device sync (consider file-based only)

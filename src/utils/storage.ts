@@ -16,6 +16,7 @@ export const loadTasks = async (): Promise<AppData> => {
       parsed.columns = parsed.columns.map((col, index) => ({
         ...col,
         visible: col.visible ?? true,
+        archived: col.archived ?? false,
         order: col.order ?? index,
         autoSort: col.autoSort ?? false,
         tasks: (col.tasks ?? []).map(task => ({

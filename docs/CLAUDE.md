@@ -42,6 +42,7 @@ A local-first, fast, minimal todo app built with Electron + React + TypeScript. 
     "name": "Project Alpha",
     "backgroundColor": "#3c3836",
     "visible": true,
+    "archived": false,
     "order": 0,
     "autoSort": false,
     "tasks": [{
@@ -83,10 +84,10 @@ src/
 ├── main.tsx            # React entry point
 ├── index.css           # Global styles, CSS custom properties
 ├── components/
-│   ├── Task.tsx/css        # Task rendering, badges, context menu, inline editing
-│   ├── Column.tsx/css      # Column with task lists, sorting, color picker
-│   ├── Sidebar.tsx/css     # Column management, visibility toggles
-│   ├── TodayPanel.tsx/css  # Collapsible "Today" focus panel
+│   ├── Task.tsx/css        # Task rendering, badges, context menu, inline editing, drag-and-drop
+│   ├── Column.tsx/css      # Column with task lists, sorting, color picker, rename, archive, drop target
+│   ├── Sidebar.tsx/css     # Column management, visibility toggles, archive/restore
+│   ├── TodayPanel.tsx/css  # Resizable "Today" focus panel with parent context grouping
 │   ├── ReportModal.tsx/css # Report generation with date range
 │   ├── SettingsModal.tsx/css   # Settings UI (data dir, auto-clear, due date display)
 │   └── DueDatePickerModal.tsx/css  # Calendar date picker modal
@@ -101,8 +102,9 @@ src/
 
 ### Key Patterns
 - **State Management:** Single `AppContext` with `useApp()` hook — all mutations go through context
-- **IPC Bridge:** `window.electron.*` API exposed via `contextBridge` in preload
-- **Context Menus:** Rendered via `createPortal()` to `document.body` with viewport-aware positioning
+- **IPC Bridge:** `window.electron.*` API exposed via `contextBridge` in preload (no unused methods exposed)
+- **Context Menus:** Rendered via `createPortal()` to `document.body` with viewport-aware positioning; hover submenus for "Move to..." use absolute positioning within the portaled menu
+- **Drag-and-Drop:** HTML5 drag API with `dataTransfer` type differentiation — column reorder uses drag handle button, task move uses `application/x-task` MIME type on the task div
 - **Auto-save:** `useEffect` watches `data` state and saves on every change
 - **Auto-clear:** Runs every 60 seconds, checks completed task ages against configured duration
 
@@ -115,16 +117,18 @@ src/
 - Add subtask via `+` button or right-click context menu
 
 ### Today Panel
-- Collapsible side panel toggled via "Today" button in top bar
+- Resizable side panel toggled via "Today" button in top bar (drag right edge to resize, 180–500px)
 - Curate a focused list of tasks from across all columns
 - Add/remove tasks via right-click context menu ("Add to Today" / "Remove from Today")
 - Tasks grouped by source column with colored dot headers
+- Child tasks sub-grouped under their immediate parent name (dimmed, non-interactive header)
+- Top-level tasks render without parent headers
 - Completing a task (from panel or column) auto-removes from Today
 - Data stored in `today.json` with `TodayTaskRef` (columnId + taskId) references
-- Daily reset: list clears at start of new day, previous day saved as snapshot
+- Daily reset: list clears at start of new local day, previous day saved as snapshot
 - "Restore Yesterday" button merges previous day's refs (filters out stale/completed)
 - Stale refs auto-cleaned on render (deleted/cleared tasks)
-- Synced with `toggleTask`, `deleteTask`, `deleteColumn` for cleanup
+- Synced with `toggleTask`, `deleteTask`, `archiveColumn`, `moveTask` for cleanup
 
 ### Priority System
 - P0 (High) — Orange `#d65d0e`
@@ -156,8 +160,12 @@ src/
 - Unlimited columns with Gruvbox color palette backgrounds
 - Drag-to-reorder via handle button
 - Show/hide columns from sidebar
-- Right-click header for: Change Color, Hide Column, Delete Column
-- Delete confirmation when column has tasks
+- Right-click header for: Rename Column, Change Color, Hide Column, Archive Column
+- Archive confirmation when column has active tasks
+- Archived columns accessible from sidebar dropdown with restore and permanent delete options
+- Permanent delete shows full task count breakdown (active, completed, report history) with warning about data loss
+- Drag-and-drop tasks between columns (top-level uncompleted tasks only)
+- Move tasks via right-click context menu hover submenu ("Move to..." with fly-out column list)
 
 ### Task Completion & Clearing
 - Completed tasks move to bottom with 70% opacity + strikethrough
@@ -198,17 +206,20 @@ src/
 - Persists size/position/maximized state between sessions
 - Hidden title bar with macOS traffic lights at (10, 10)
 - Toggleable sidebar (left) for column management
-- Toggleable Today panel (left, between sidebar and columns) for daily focus
+- Resizable Today panel (left, between sidebar and columns) for daily focus
 
 ## Important Design Decisions
 
 1. **Subtask Completion Timestamps:** Completing a parent preserves original `completedAt` for subtasks already completed
 2. **Subtask Priority:** Does NOT inherit parent's priority (defaults to none)
-2. **Due Date Field:** Optional (`dueDate?: string`), no backward compat issue — existing tasks without it render fine
-3. **Working Days:** Only Mon-Fri count; Friday before Monday due = 1 working day
-4. **Cleared vs Deleted:** Cleared tasks are hidden but retained 90 days for reports
-5. **Backward Compatibility:** `storage.ts` adds defaults for any missing fields on load (`cleared`, `pending`, `children`, `visible`, `order`)
-6. **Context Menu Positioning:** Uses `useLayoutEffect` to adjust menu if it overflows viewport edges (10px padding)
+3. **Due Date Field:** Optional (`dueDate?: string`), no backward compat issue — existing tasks without it render fine
+4. **Working Days:** Only Mon-Fri count; Friday before Monday due = 1 working day
+5. **Cleared vs Deleted:** Cleared tasks are hidden but retained 90 days for reports
+6. **Archive vs Delete:** Archiving a column hides it from the board but preserves data for reports; permanent delete removes everything including report history
+7. **Today Date Calculation:** Uses local time (`getFullYear`/`getMonth`/`getDate`) not UTC, preventing premature daily reset in western timezones
+8. **Backward Compatibility:** `storage.ts` adds defaults for any missing fields on load (`cleared`, `pending`, `children`, `visible`, `order`, `archived`)
+9. **Context Menu Positioning:** Uses `useLayoutEffect` to adjust menu if it overflows viewport edges (10px padding)
+10. **Task Drag vs Column Drag:** Differentiated via `dataTransfer.types` — `application/x-task` for task moves, default for column reorder
 
 ## Future Enhancements (Not in current version)
 
